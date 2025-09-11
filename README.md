@@ -52,6 +52,3 @@ Si te gusta este proyecto y quieres apoyar su desarrollo, puedes hacer una donac
 [![Donar con PayPal](https://www.paypalobjects.com/es_ES/ES/i/btn/btn_donateCC_LG.gif)](https://paypal.me/gessendarien)
 
 ¡Cualquier contribución es apreciada y ayuda a mantener el proyecto activo! 🐶🧡
-
-
-# cascabel-launcher
