@@ -1,0 +1,62 @@
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #333;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+  background-color: #444;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background-color: #4a8fff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #3a7fee;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+Verificar nueva versión
+/* Estilo especial para el botón en estado vacío */
+.empty-message .btn {
+  margin-top: 10px !important;
+  align-self: center !important;
+  padding: 15px 30px !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(74, 143, 255, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.empty-message .btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(74, 143, 255, 0.4) !important;
+}

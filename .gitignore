@@ -1,0 +1,46 @@
+# ─── Node.js ───────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# ─── Logs ──────────────────────────────────
+logs
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+
+# ─── Electron build ────────────────────────
+dist/
+build/
+out/
+release/
+*.asar
+
+# ─── Cache ─────────────────────────────────
+.cache/
+.npm/
+.yarn/
+.tmp/
+.temp/
+
+# ─── OS files ──────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── VSCode / IDE configs ──────────────────
+.vscode/
+.idea/
+*.swp
+
+# ─── Env files ─────────────────────────────
+.env
+.env.local
+.env.*.local

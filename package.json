@@ -1,0 +1,74 @@
+{
+  "name": "cascabel-launcher",
+  "version": "1.0.0",
+  "description": "Launcher multiplataforma de emuladores para Windows y Linux.",
+  "main": "main.js",
+  "homepage": "https://github.com/gessendarien/cascabel-launcher",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-linux": "electron-builder --linux",
+    "dist": "electron-builder --publish=never",
+    "release": "electron-builder --publish=always",
+    "package-win": "electron-packager . Cascabel --platform=win32 --arch=x64 --out=dist --overwrite --icon=assets/cascabel.ico"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^26.0.12",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "com.cascabel.launcher",
+    "productName": "Cascabel",
+    "icon": "assets/cascabel.ico",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "src/**/*",
+      "assets/**/*",
+      "themes/**/*",
+      "package.json",
+      "node_modules/electron-log/**/*",
+      "node_modules/electron-updater/**/*"
+    ],
+    "win": {
+      "icon": "assets/cascabel.ico",
+      "target": {
+        "target": "portable",
+        "arch": [
+          "x64"
+        ]
+      },
+      "forceCodeSigning": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cascabel Launcher",
+      "uninstallDisplayName": "Cascabel Launcher",
+      "installerIcon": "assets/cascabel.png",
+      "uninstallerIcon": "assets/cascabel.png",
+      "allowElevation": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "installer.nsh"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "gessendarien",
+      "repo": "cascabel-launcher"
+    }
+  }
+}

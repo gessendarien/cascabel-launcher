@@ -1,0 +1,37 @@
+/* Iconos para la interfaz */
+.icon-add::before {
+  content: "➕";
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+/* Mejoras al menú contextual */
+.context-menu {
+  position: fixed;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #eee;
+  font-size: 14px;
+}
+
+.context-menu-item:hover {
+  background: #3a3a3a;
+}
+
+.context-menu-item:not(:last-child) {
+  border-bottom: 1px solid #444;
+}
+}

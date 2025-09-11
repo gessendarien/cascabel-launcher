@@ -1,0 +1,367 @@
+/* Estilos para el modal de confirmación */
+.confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+}
+
+.confirm-content {
+  background: #222;
+  padding: 24px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: calc(100% - 40px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  text-align: center;
+  animation: confirm-appear 0.3s ease;
+}
+
+@keyframes confirm-appear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.confirm-content h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #ff6b6b;
+}
+
+.confirm-content p {
+  margin-bottom: 20px;
+  color: #eee;
+}
+
+.confirm-warning {
+  color: #ff8888 !important;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Estilos para modales generales */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+}
+
+.modal {
+  background: #222;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  animation: modal-appear 0.3s ease;
+  max-width: calc(100% - 40px);
+  max-height: calc(100% - 40px);
+  min-width: 400px;
+}
+
+@keyframes modal-appear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  padding: 20px 24px 0 24px;
+  border-bottom: 1px solid #444;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.modal-header h2 {
+  margin: 0 0 20px 0;
+  color: #4a8fff;
+}
+
+.close-button {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.modal-content {
+  padding: 0 24px 24px 24px;
+}
+
+/* Estilos para el modal de configuración con diseño dashboard */
+.config-sidebar {
+  width: 200px;
+  background: #2a2a2a;
+  border-right: 1px solid #3a3a3a;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.config-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+}
+
+.config-menu-item {
+  background: transparent;
+  border: none;
+  color: #bbb;
+  padding: 16px 24px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid #3a3a3a;
+  transition: all 0.2s ease;
+}
+
+.config-menu-item:hover {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.config-menu-item.active {
+  background: #4a90e2;
+  color: #fff;
+}
+
+.config-content {
+  flex: 1;
+  padding: 32px;
+  background: #1e1e1e;
+  overflow-y: auto;
+}
+
+.config-section {
+  display: none;
+}
+
+.config-section.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.config-section h3 {
+  color: #fff;
+  font-size: 24px;
+  margin: 0 0 8px 0;
+}
+
+.config-section p {
+  color: #bbb;
+  margin: 0 0 24px 0;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Estilos para el selector de colores */
+.color-customizer {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.color-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.color-option:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.color-option label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.color-input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-input-group input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #3a3a3a;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input-group input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.color-value {
+  color: #bbb;
+  font-family: monospace;
+  font-size: 12px;
+  background: #1e1e1e;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 70px;
+  text-align: center;
+}
+
+.theme-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+/* Estilos para la sección Acerca de */
+.about-content {
+  padding: 20px 0;
+}
+
+.app-info, .features-info, .tech-info, .credits-info {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: none;
+}
+
+.app-info h4, .features-info h4, .tech-info h4, .credits-info h4 {
+  margin: 0 0 10px 0;
+  color: var(--header-color, #db2424);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.features-info ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.features-info li {
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.app-info p, .tech-info p, .credits-info p {
+  margin: 5px 0;
+  line-height: 1.5;
+}
+
+.app-info p strong, .tech-info p strong {
+  color: var(--header-color, #db2424);
+}
+
+/* Nuevos estilos para la sección Acerca de - estilo similar a update-instructions */
+.about-card {
+  background: #333;
+  border-radius: 6px;
+  padding: 5px;
+  margin: 12px 0;
+  border: none;
+}
+
+.about-card h4 {
+  margin: 0 0 10px 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.about-card p {
+  margin: 0;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.donation-card {
+  border-radius: 6px;
+  padding: 16px;
+  margin: 12px 0;
+  border: none;
+  background: transparent;
+}
+
+.donation-card h4 {
+  margin: 0 0 10px 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.donation-card p {
+  margin: 0 0 12px 0;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.donation-link {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #0070ba;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.donation-link:hover {
+  background: #005ea6;
+  text-decoration: none;
+}

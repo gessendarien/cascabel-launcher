@@ -2,6 +2,9 @@
 
 Launcher de juegos multiplataforma para Windows y Linux.
 
+
+![Cascabel Launcher](screenshot.png)
+
 ## Características
 
 - Gestión de múltiples emuladores con pestañas
