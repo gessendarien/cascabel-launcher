@@ -32,6 +32,8 @@ npm start
 - Guarda la configuración
 - Navega entre las pestañas para ver tus diferentes respaldos agrupados por consola
 - Arrastra las pestañas sobre su eje para organizarlas
+- Da click derecho sobre las pestañas para editarlas u ordenar el contenido
+- Si llenas la barra, puedes hacer scroll con la rueda del mouse por todas las pestañas
 
 ## Personalización
 
@@ -45,7 +47,16 @@ Puedes crear seleccionar el tema de colores que más te guste desde el botón de
 
 GNU General Public License v3.0
 
-## Donaciones
+
+## Descargar
+
+Usa Cascabel Launcher como cualquier programa
+
+**[Releases](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
+
+Disponible para Windows y Linux.
+
+## Gracias
 
 Si te gusta este proyecto y quieres apoyar su desarrollo, puedes hacer una donación a través de PayPal:
 
