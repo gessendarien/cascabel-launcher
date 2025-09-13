@@ -11,7 +11,8 @@
     "build-linux": "electron-builder --linux",
     "dist": "electron-builder --publish=never",
     "release": "electron-builder --publish=always",
-    "package-win": "electron-packager . Cascabel --platform=win32 --arch=x64 --out=dist --overwrite --icon=assets/cascabel.ico"
+    "package-win": "electron-packager . Cascabel --platform=win32 --arch=x64 --out=dist --overwrite --icon=assets/cascabel.ico",
+    "package-linux": "electron-packager . Cascabel --platform=linux --arch=x64 --out=dist --overwrite --icon=assets/cascabel.png"
   },
   "author": "",
   "license": "MIT",

@@ -5,6 +5,16 @@ Launcher de juegos multiplataforma para Windows y Linux.
 
 ![Cascabel Launcher](screenshot.png)
 
+## Instrucciones
+
+- Agrega una coinsola
+- Coloca nombre y tipo de consola
+- Selecicona la ruta del ejecutable
+- Selecicona la ruta de juegos
+- Selecciona la ruta de las carátulas
+
+**Importante**: El nombre de los juegos y el de las carátulas deben coindidir, es decir debe tener cada juego el mismo nombre de su carátula.
+
 ## Características
 
 - Gestión de múltiples emuladores con pestañas
