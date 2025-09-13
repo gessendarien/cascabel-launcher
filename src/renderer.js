@@ -2462,7 +2462,7 @@ let draggedIndex = null;
 function handleDragStart(e) {
   draggedTab = this;
   const tabsContainer = this.parentElement;
-  draggedIndex = Array.from(tabsContainer.children).indexOf(this) - 1; // -1 porque el primer hijo es el botón menú
+  draggedIndex = Array.from(tabsContainer.children).indexOf(this); // Sin -1 porque el menú está separado
   this.classList.add('dragging');
   
   // Configurar el efecto visual del drag
@@ -2514,7 +2514,7 @@ function handleDrop(e) {
   
   if (draggedTab !== this) {
     const tabsContainer = this.parentElement;
-    const targetIndex = Array.from(tabsContainer.children).indexOf(this) - 1; // -1 porque el primer hijo es el botón menú
+    const targetIndex = Array.from(tabsContainer.children).indexOf(this); // Sin -1 porque el menú está separado
     
     // Reordenar el array de emuladores
     const draggedEmulator = config.emulators[draggedIndex];
