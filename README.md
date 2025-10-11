@@ -18,10 +18,13 @@ Tú debes poseer los respaldos de los juegos y éstos deben ser respaldos de tus
 
 ## Características
 
-- Gestión de múltiples emuladores con pestañas
-- Configuración de rutas ejecutables y carpetas de juegos
+- Gestión de múltiples emuladores con pestañas horizontales
+- Configuración de rutas ejecutables, juegos y carátulas
 - Temas personalizables
-- Navegación horizontal por pestañas para cada consola
+- Opción de música de fondo
+- Orden alfabético o por más jugados
+- Imagen de perfil configurable
+- Guardado de configuración para migrar
 
 ## Instalación
 
@@ -42,7 +45,7 @@ npm install
 npm start
 ```
 
-Si lo prefieres puedes hacer tu propio build.
+Si lo prefieres puedes hacer tu propio build con tus cambios.
 
 ## Uso
 
@@ -54,10 +57,6 @@ Si lo prefieres puedes hacer tu propio build.
 - Arrastra las pestañas sobre su eje para organizarlas
 - Da click derecho sobre las pestañas para editarlas u ordenar el contenido
 - Si llenas la barra, puedes hacer scroll con la rueda del mouse por todas las pestañas
-
-## Personalización
-
-Puedes crear seleccionar el tema de colores que más te guste desde el botón de Configuración > Interfaz
 
 ## Disclaimer
 
