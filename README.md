@@ -14,7 +14,6 @@ Launcher de juegos multiplataforma para Windows y Linux.
 - Selecciona la ruta de las carátulas
 
 **Importante**: El nombre de los juegos y el de las carátulas deben coindidir, es decir debe tener cada juego el mismo nombre de su carátula.
-Tú debes poseer los respaldos de los juegos y éstos deben ser respaldos de tus propios juegos en formato físico.
 
 ## Características
 
@@ -28,7 +27,7 @@ Tú debes poseer los respaldos de los juegos y éstos deben ser respaldos de tus
 
 ## Instalación
 
-Usa Cascabel Launcher como cualquier programa descargándolo de la sección de releases, disponible para Windows y Linux :
+Usa Cascabel Launcher como cualquier programa descargándolo de la sección de releases, disponible para Windows y Linux:
 
 **[Ir a Releases](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
 
