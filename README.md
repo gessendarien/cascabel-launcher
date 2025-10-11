@@ -59,7 +59,7 @@ Si lo prefieres puedes hacer tu propio build con tus cambios.
 
 ## Disclaimer
 
-**Importante**: Este programa se distribuye sin ninguna garantía de uso y sin fines de lucro. El material que es configurado dentro del programa (backups de juegos, ejecutables de consolas y carátulas) debe ser de tu autoría y debes poseer legalmente los derechos para utilizarlo. Este launcher es únicamente una herramienta de gestión y organización; por lo que no distribuye, alienta, incita ni provee ningún material total o parcial protegido bajo derechos de autor. El usuario es responsable de cumplir con todas las leyes de derechos de autor aplicables en su jurisdicción.
+**Importante**: Este programa se distribuye sin ninguna garantía de uso y sin fines de lucro. El material que es configurado dentro del programa (backups de juegos, ejecutables de consolas, carátulas o imágenes, y audios) debe ser de tu autoría y debes poseer legalmente los derechos para utilizarlo. Este launcher es únicamente una herramienta de gestión y organización; por lo que no distribuye, alienta, incita ni provee ningún material total o parcial protegido bajo derechos de autor. El usuario es responsable de cumplir con todas las leyes de derechos de autor aplicables en su jurisdicción.
 
 ## Licencia
 
