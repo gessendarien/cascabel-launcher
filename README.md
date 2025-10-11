@@ -7,13 +7,14 @@ Launcher de juegos multiplataforma para Windows y Linux.
 
 ## Instrucciones
 
-- Agrega una coinsola
+- Agrega una consola
 - Coloca nombre y tipo de consola
-- Selecicona la ruta del ejecutable
-- Selecicona la ruta de juegos
+- Selecciona la ruta del ejecutable
+- Selecciona la ruta de juegos
 - Selecciona la ruta de las carátulas
 
 **Importante**: El nombre de los juegos y el de las carátulas deben coindidir, es decir debe tener cada juego el mismo nombre de su carátula.
+Tú debes poseer los respaldos de los juegos y éstos deben ser respaldos de tus propios juegos en formato físico.
 
 ## Características
 
@@ -24,6 +25,13 @@ Launcher de juegos multiplataforma para Windows y Linux.
 
 ## Instalación
 
+Usa Cascabel Launcher como cualquier programa descargándolo de la sección de releases, disponible para Windows y Linux :
+
+**[Ir a Releases](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
+
+
+O si lo prefieres puedes ejecutar el código fuente clonando el repositorio:
+
 1. Clona este repositorio
 2. Instala las dependencias:
 ```
@@ -33,6 +41,8 @@ npm install
 ```
 npm start
 ```
+
+Si lo prefieres puedes hacer tu propio build.
 
 ## Uso
 
@@ -57,14 +67,6 @@ Puedes crear seleccionar el tema de colores que más te guste desde el botón de
 
 GNU General Public License v3.0
 
-
-## Descargar
-
-Usa Cascabel Launcher como cualquier programa
-
-**[Releases](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
-
-Disponible para Windows y Linux.
 
 ## Gracias
 
