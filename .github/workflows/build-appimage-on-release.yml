@@ -1,0 +1,48 @@
+name: Build AppImage and upload to Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build_appimage:
+    name: Build AppImage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build AppImage (linux)
+        run: npm run build-linux
+
+      - name: Expose path to built artifacts
+        run: |
+          echo "APPIMAGE=$(ls dist/*.AppImage | head -n1)" >> $GITHUB_ENV || true
+          echo "LATEST_YML=$(ls dist/latest-*.yml | head -n1)" >> $GITHUB_ENV || true
+
+      - name: Upload AppImage to Release
+        if: env.APPIMAGE != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.APPIMAGE }}
+          asset_name: ${{ env.APPIMAGE && format('{0}', env.APPIMAGE) }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload latest-linux.yml to Release
+        if: env.LATEST_YML != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.LATEST_YML }}
+          asset_name: ${{ env.LATEST_YML && format('{0}', env.LATEST_YML) }}
+          asset_content_type: application/octet-stream

@@ -29,10 +29,12 @@ Launcher de juegos multiplataforma para Windows y Linux.
 
 Usa Cascabel Launcher como cualquier programa descargándolo de la sección de releases, disponible para Windows y Linux:
 
-**[Ir a Releases](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
+**[Descargar Cascabel Launcher para mi sistema operativo](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
 
+Versión actual: 1.0.0
 
-O si lo prefieres puedes ejecutar el código fuente clonando el repositorio:
+## Desarrolladores
+Si lo prefieres puedes ejecutar el código fuente clonando el repositorio:
 
 1. Clona este repositorio
 2. Instala las dependencias:
@@ -44,7 +46,6 @@ npm install
 npm start
 ```
 
-Si lo prefieres puedes hacer tu propio build con tus cambios.
 
 ## Uso
 

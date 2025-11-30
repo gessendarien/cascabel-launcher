@@ -51,6 +51,12 @@
       },
       "forceCodeSigning": false
     },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/cascabel.png"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
