@@ -111,7 +111,7 @@ async function loadLanguage(targetLanguageName = null) {
     // Si no se especifica idioma, usar el de la configuración o buscar español por defecto
     let languageToLoad = targetLanguageName;
     if (!languageToLoad) {
-      languageToLoad = config.ui?.language || 'Español';
+      languageToLoad = config.ui?.language || 'English';
     }
     
     // Buscar el idioma por nombre (más flexible)
@@ -123,13 +123,13 @@ async function loadLanguage(targetLanguageName = null) {
     
     // Si no se encuentra, usar el primer idioma disponible o español como fallback
     if (!languageInfo && availableLanguages.length > 0) {
-      // Intentar encontrar español
+      // Intentar encontrar inglés
       languageInfo = availableLanguages.find(lang => 
-        lang.languageName.toLowerCase().includes('español') ||
-        lang.languageCode === 'es'
+        lang.languageName.toLowerCase().includes('english') ||
+        lang.languageCode === 'en'
       );
       
-      // Si no hay español, usar el primer idioma disponible
+      // Si no hay inglés, usar el primer idioma disponible
       if (!languageInfo) {
         languageInfo = availableLanguages[0];
       }
@@ -154,9 +154,9 @@ async function loadLanguage(targetLanguageName = null) {
     
   } catch (error) {
     
-    // Fallback absoluto: intentar cargar español directamente
+    // Fallback absoluto: intentar cargar inglés directamente
     try {
-      const fallbackPath = path.join(__dirname, 'languages', 'Español.json');
+      const fallbackPath = path.join(__dirname, 'languages', 'English.json');
       if (fs.existsSync(fallbackPath)) {
         currentLanguage = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
       }
@@ -177,18 +177,18 @@ function t(key) {
   // Función para obtener texto traducido usando notación de punto
   // Ejemplo: t('ui.buttons.save') retorna currentLanguage.ui.buttons.save
   
-  // Fallback simple - cargar español por defecto si no hay idioma cargado
+  // Fallback simple - cargar inglés por defecto si no hay idioma cargado
   const getFallback = (key) => {
     try {
-      // Si no hay idioma cargado, intentar cargar español directamente
+      // Si no hay idioma cargado, intentar cargar inglés directamente
       if (!currentLanguage || Object.keys(currentLanguage).length === 0) {
-        const fallbackPath = path.join(__dirname, 'languages', 'Español.json');
+        const fallbackPath = path.join(__dirname, 'languages', 'English.json');
         if (fs.existsSync(fallbackPath)) {
-          const spanishLanguage = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+          const englishLanguage = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
           
-          // Usar el archivo español para obtener el valor
+          // Usar el archivo inglés para obtener el valor
           const keys = key.split('.');
-          let value = spanishLanguage;
+          let value = englishLanguage;
           
           for (const k of keys) {
             if (value && typeof value === 'object' && k in value) {
@@ -681,6 +681,43 @@ function handleGameClick(emulatorPath, gamePath, gameCard) {
   });
 }
 
+// Generar icono SVG del control de cada consola
+function getConsoleSvg(iconType) {
+  if (!iconType) iconType = 'otra';
+  const key = String(iconType).toLowerCase();
+  
+  try {
+    const svgPath = path.join(__dirname, '..', 'assets', 'console-icons', `${key}.svg`);
+    if (fs.existsSync(svgPath)) {
+      return fs.readFileSync(svgPath, 'utf8');
+    }
+  } catch (error) {
+    console.error('Error loading icon:', error);
+  }
+  
+  // Fallback if file not found
+  try {
+    const fallbackPath = path.join(__dirname, '..', 'assets', 'console-icons', 'otra.svg');
+    if (fs.existsSync(fallbackPath)) {
+      return fs.readFileSync(fallbackPath, 'utf8');
+    }
+  } catch (error) {
+    console.error('Error loading fallback icon:', error);
+  }
+  
+  // Ultimate fallback inline SVG
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path d="M5 7h14a3 3 0 0 1 3 3v2c0 1.5-.5 2.5-1 3l-.5.5v2.5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2V16H8.5v2a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-2.5L3 15c-.5-.5-1-1.5-1-3v-2a3 3 0 0 1 3-3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity="0.1"/>
+    <rect x="4.5" y="10.5" width="3" height="1" rx="0.2" fill="currentColor"/>
+    <rect x="5.5" y="9.5" width="1" height="3" rx="0.2" fill="currentColor"/>
+    <circle cx="17" cy="9.5" r="0.9" fill="currentColor"/>
+    <circle cx="19" cy="11" r="0.9" fill="currentColor"/>
+    <circle cx="17" cy="12.5" r="0.9" fill="currentColor"/>
+    <circle cx="15" cy="11" r="0.9" fill="currentColor"/>
+    <circle cx="12" cy="10" r="0.8" fill="currentColor" opacity="0.4"/>
+  </svg>`;
+}
+
 // Renderizar las pestañas de emuladores
 function renderTabs() {
   const nav = document.getElementById('emulator-tabs');
@@ -778,8 +815,11 @@ function renderTabs() {
     tab.className = 'tab' + (idx === 0 ? ' selected' : '');
     tab.draggable = true; // Hacer la pestaña arrastrable
     
-    // Mostramos solo el nombre sin icono
-    tab.innerHTML = `<span>${emu.name}</span>`;
+    // Generar el icono SVG de la consola basado en su tipo
+    const iconSvg = getConsoleSvg(emu.icon);
+    
+    // Mostramos icono y nombre
+    tab.innerHTML = `${iconSvg} <span>${emu.name}</span>`;
     
     // Click izquierdo para seleccionar pestaña
     tab.addEventListener('click', function(e) {
@@ -1586,183 +1626,276 @@ function showConfigModal() {
   const configModal = document.createElement('div');
   configModal.className = 'modal-overlay';
   configModal.innerHTML = `
-    <div class="modal" style="width: 800px; height: 600px;">
-      <div class="modal-header">
-        <h2>${t('ui.configuration.title')}</h2>
-        <span class="close-button" id="config-close">&times;</span>
-      </div>
-      <div class="modal-content" style="display: flex; padding: 0; height: calc(100% - 80px);">
-        <!-- Menú lateral izquierdo -->
-        <div class="config-sidebar">
-          <nav class="config-menu">
-            <button class="config-menu-item active" data-section="theme">${t('ui.menu.interface')}</button>
-            <button class="config-menu-item" data-section="update">${t('ui.menu.update')}</button>
-            <button class="config-menu-item" data-section="about">${t('ui.menu.about')}</button>
-          </nav>
-        </div>
-        
-        <!-- Contenido derecho -->
-        <div class="config-content">
-          <!-- Sección Tema -->
-          <div class="config-section active" id="theme-section">
-            <h3>${t('ui.configuration.themeConfig')}</h3>
-            <p>${t('ui.configuration.themeDescription')}</p>
-            
-            <!-- Imagen de perfil como primera opción -->
-            <div class="profile-customizer">
-              <h4>${t('ui.configuration.profileImage')}</h4>
-              <div class="form-group">
-                <div class="profile-image-container">
-                  <div class="profile-image-preview" id="profile-image-preview"></div>
-                  <div class="profile-remove-btn" id="profile-remove-btn">&times;</div>
-                  <input id="profile-image-input" type="file" accept="image/*" style="display: none;" />
-                </div>
-              </div>
-            </div>
-            
-            <div class="color-customizer">
-              <div class="color-option">
-                <label for="header-color">${t('ui.configuration.headerColor')}</label>
-                <div class="color-input-group">
-                  <input type="color" id="header-color" value="#db2424" />
-                  <span class="color-value">#db2424</span>
-                </div>
-              </div>
-              
-              <div class="color-option">
-                <label for="tab-selected-color">${t('ui.configuration.tabSelected')}</label>
-                <div class="color-input-group">
-                  <input type="color" id="tab-selected-color" value="#2a2a2a" />
-                  <span class="color-value">#2a2a2a</span>
-                </div>
-              </div>
-              
-              <div class="color-option">
-                <label for="tab-hover-color">${t('ui.configuration.tabHover')}</label>
-                <div class="color-input-group">
-                  <input type="color" id="tab-hover-color" value="#a49a9a" />
-                  <span class="color-value">#a49a9a</span>
-                </div>
-              </div>
-              
-              <div class="color-option">
-                <label for="tab-background-color">${t('ui.configuration.tabBackground')}</label>
-                <div class="color-input-group">
-                  <input type="color" id="tab-background-color" value="#e83b3b" />
-                  <span class="color-value">#e83b3b</span>
-                </div>
-              </div>
-              
-              <div class="color-option">
-                <label for="tab-text-color">${t('ui.configuration.tabText')}</label>
-                <div class="color-input-group">
-                  <input type="color" id="tab-text-color" value="#ffffff" />
-                  <span class="color-value">#ffffff</span>
-                </div>
-              </div>
-              
-              <div class="color-option">
-                <label for="main-background-color">${t('ui.configuration.mainBackground')}</label>
-                <div class="color-input-group">
-                  <input type="color" id="main-background-color" value="#222222" />
-                  <span class="color-value">#222222</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="tooltip-customizer">
-              <div class="checkbox-group">
-                <input type="checkbox" id="show-tooltips" checked />
-                <label for="show-tooltips">${t('ui.configuration.showTooltips')}</label>
-              </div>
-              <small>${t('ui.configuration.tooltipsDescription')}</small>
-            </div>
-
-            <div class="language-customizer">
-              <h4>${t('ui.configuration.language')}</h4>
-              <div class="form-group">
-                <label for="language-select">${t('ui.configuration.selectLanguage')}</label>
-                <select id="language-select" class="language-select">
-                  <!-- Options will be populated dynamically -->
-                </select>
-              </div>
-              <small>${t('ui.configuration.languageDescription')}</small>
-            </div>
-
-            <div class="audio-customizer">
-              <h4>${t('ui.configuration.backgroundMusic')}</h4>
-              <div class="form-group">
-                <label for="background-music">${t('ui.configuration.audioFile')}</label>
-                <div class="file-input-group">
-                  <input id="background-music" type="text" placeholder="${t('ui.configuration.selectAudioPlaceholder')}" readonly />
-                  <button id="select-audio-btn" class="btn btn-secondary">${t('ui.buttons.select')}</button>
-                  <button id="play-stop-audio-btn" class="btn btn-secondary" style="display: none;">${t('ui.buttons.play')}</button>
-                  <button id="clear-audio-btn" class="btn btn-secondary" style="display: none;">${t('ui.buttons.clear')}</button>
-                </div>
-                <small>${t('ui.configuration.audioNote')}</small>
-              </div>
-            </div>
-            
-            <div class="theme-actions">
-              <button id="apply-theme-btn" class="btn btn-primary">${t('ui.configuration.applyTheme')}</button>
-              <button id="reset-theme-btn" class="btn btn-secondary">${t('ui.configuration.resetDefault')}</button>
-            </div>
+    <div class="config-modal-container flex items-center justify-center p-xl" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;">
+      <!-- Main Modal Container -->
+      <div class="config-modal" style="width: 1000px; height: 750px; max-width: 95vw; max-height: 95vh;">
+        <!-- TopAppBar -->
+        <header class="config-header">
+          <div class="config-header-title">
+            <span class="material-symbols-outlined">settings</span>
+            <span>${t('ui.configuration.title')}</span>
           </div>
+          <button class="config-close-btn" id="config-close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </header>
 
-          <!-- Sección Actualización -->
-          <div class="config-section" id="update-section">
-            <h3>${t('ui.update.title')}</h3>            
-            <div class="form-group">
-                <div class="about-card">
-                <ul>
-                  <li>${t('ui.update.instructions.0')}</li>
-                  <li>${t('ui.update.instructions.1')}</li>
-                  <li>${t('ui.update.instructions.2')}</li>
-                  <li>${t('ui.update.instructions.3')}</li>
-                </ul>
+        <!-- Main Content Layout -->
+        <div class="config-body">
+          <!-- Sidebar -->
+          <aside class="config-sidebar">
+            <!-- Profile Section -->
+            <div class="config-profile-card">
+              <div class="config-profile-image-container">
+                <div id="profile-image-preview" class="config-profile-image" style="cursor: pointer;" title="${t('ui.configuration.profileImage')}"></div>
+              </div>
+              <input id="profile-image-input" type="file" accept="image/*" style="display: none;" />
+              <div class="config-profile-status">Cascabel v1.0.0</div>
+              <button class="config-profile-btn" id="profile-remove-btn" style="display: none; margin-top: 8px;">
+                <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                ${t('ui.buttons.clear')}
+              </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="config-nav">
+              <button class="config-nav-item active config-menu-item" data-section="theme">
+                <span class="material-symbols-outlined">palette</span>
+                ${t('ui.menu.interface')}
+              </button>
+              <button class="config-nav-item config-menu-item" data-section="update">
+                <span class="material-symbols-outlined">system_update</span>
+                ${t('ui.menu.update')}
+              </button>
+              <button class="config-nav-item config-menu-item" data-section="about">
+                <span class="material-symbols-outlined">info</span>
+                ${t('ui.menu.about')}
+              </button>
+            </nav>
+          </aside>
+
+          <!-- Main Panel -->
+          <main class="config-main">
+            <!-- Theme Section -->
+            <div class="config-section active" id="theme-section">
+              <div class="config-section-header">
+                <div class="config-section-title">
+                  <span class="material-symbols-outlined text-primary">format_paint</span>
+                  <h3>${t('ui.configuration.themeConfig')}</h3>
+                </div>
+                <span class="config-section-subtitle">${t('ui.menu.interface')}</span>
+              </div>
+
+              <div class="config-cards-grid">
+                <!-- Header Color -->
+                <div class="config-card">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">border_top</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.headerColor')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <span class="color-value font-mono text-sm" style="color: var(--on-surface-variant); font-family: monospace; margin-right: 8px;"></span>
+                    <input type="color" id="header-color" value="#db2424" />
+                  </div>
+                </div>
+                
+                <!-- Tab Selected Color -->
+                <div class="config-card">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">tab</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.tabSelected')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <span class="color-value font-mono text-sm" style="color: var(--on-surface-variant); font-family: monospace; margin-right: 8px;"></span>
+                    <input type="color" id="tab-selected-color" value="#2a2a2a" />
+                  </div>
                 </div>
 
-                  <p class="current-version">${t('ui.update.currentVersion')} <strong></strong></p>
+                <!-- Tab Hover Color -->
+                <div class="config-card">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">touch_app</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.tabHover')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <span class="color-value font-mono text-sm" style="color: var(--on-surface-variant); font-family: monospace; margin-right: 8px;"></span>
+                    <input type="color" id="tab-hover-color" value="#a49a9a" />
+                  </div>
+                </div>
 
-              <div style="display: flex; gap: 8px; margin-top: 16px;">
-                <button id="open-github-releases" class="btn btn-primary">${t('ui.update.projectPage')}</button>
+                <!-- Tab Background Color -->
+                <div class="config-card">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">ad_group</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.tabBackground')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <span class="color-value font-mono text-sm" style="color: var(--on-surface-variant); font-family: monospace; margin-right: 8px;"></span>
+                    <input type="color" id="tab-background-color" value="#e83b3b" />
+                  </div>
+                </div>
+
+                <!-- Tab Text Color -->
+                <div class="config-card">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">text_fields</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.tabText')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <span class="color-value font-mono text-sm" style="color: var(--on-surface-variant); font-family: monospace; margin-right: 8px;"></span>
+                    <input type="color" id="tab-text-color" value="#ffffff" />
+                  </div>
+                </div>
+
+                <!-- Main Background Color -->
+                <div class="config-card">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">wallpaper</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.mainBackground')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <span class="color-value font-mono text-sm" style="color: var(--on-surface-variant); font-family: monospace; margin-right: 8px;"></span>
+                    <input type="color" id="main-background-color" value="#222222" />
+                  </div>
+                </div>
+
+                <!-- Language Section -->
+                <div class="config-card full-width">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">translate</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.language')}</p>
+                      <p class="desc">${t('ui.configuration.languageDescription')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action" style="min-width: 200px;">
+                    <select id="language-select"></select>
+                  </div>
+                </div>
+
+                <!-- Tooltips -->
+                <div class="config-card full-width">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">help</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.showTooltips')}</p>
+                      <p class="desc">${t('ui.configuration.tooltipsDescription')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <input type="checkbox" id="show-tooltips" checked />
+                  </div>
+                </div>
+
+                <!-- Background Music -->
+                <div class="config-card flex-col full-width">
+                  <div class="config-card-info" style="width: 100%;">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">music_note</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.backgroundMusic')}</p>
+                      <p class="desc">${t('ui.configuration.audioNote')}</p>
+                    </div>
+                  </div>
+                  <div class="input-group">
+                    <input id="background-music" type="text" placeholder="${t('ui.configuration.selectAudioPlaceholder')}" readonly />
+                    <button id="select-audio-btn" class="btn-config btn-config-secondary" style="padding: 10px 16px;">
+                      <span class="material-symbols-outlined" style="font-size: 20px; margin:0;">folder_open</span>
+                    </button>
+                    <button id="play-stop-audio-btn" class="btn-config btn-config-secondary" style="display: none; padding: 10px 16px;">
+                      <span class="material-symbols-outlined" style="font-size: 20px; margin:0;">play_arrow</span>
+                    </button>
+                    <button id="clear-audio-btn" class="btn-config btn-config-secondary" style="display: none; padding: 10px 16px;">
+                      <span class="material-symbols-outlined" style="font-size: 20px; margin:0;">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="config-footer">
+                <button id="reset-theme-btn" class="btn-config btn-config-secondary">
+                  ${t('ui.configuration.resetDefault')}
+                </button>
+                <button id="apply-theme-btn" class="btn-config btn-config-primary">
+                  ${t('ui.configuration.applyTheme')}
+                </button>
               </div>
             </div>
-            
-            <div class="form-group">
-            </div>
-            
-            <div class="form-group">
-              <h4>${t('ui.update.configManagement')}</h4>
-              <p><strong>${t('ui.update.location')}</strong> <span id="config-path">Cargando...</span></p>
-              
-              <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <button id="backup-config-btn" class="btn btn-secondary">${t('ui.update.backupConfig')}</button>
-                <button id="export-config-btn" class="btn btn-secondary">${t('ui.update.exportConfig')}</button>
-                <button id="import-config-btn" class="btn btn-secondary">${t('ui.update.importConfig')}</button>
+
+            <!-- Update Section -->
+            <div class="config-section" id="update-section">
+              <div class="config-section-header">
+                <div class="config-section-title">
+                  <span class="material-symbols-outlined text-primary">update</span>
+                  <h3>${t('ui.update.title')}</h3>
+                </div>
+                <span class="config-section-subtitle">${t('ui.menu.update')}</span>
               </div>
               
-              <small>
-                <strong>Nota:</strong> ${t('ui.update.configNote')}
-                Los backups se crean automáticamente antes de importar configuraciones.
-              </small>
-            </div>
-          </div>
+              <div class="config-card full-width flex-col">
+                <div class="about-card-modern">
+                  <ul>
+                    <li>${t('ui.update.instructions.0')}</li>
+                    <li>${t('ui.update.instructions.1')}</li>
+                    <li>${t('ui.update.instructions.2')}</li>
+                    <li>${t('ui.update.instructions.3')}</li>
+                  </ul>
+                </div>
+                <p class="current-version" style="font-size: 16px; margin: 0; color: var(--on-surface);">${t('ui.update.currentVersion')} <strong style="color: var(--primary);"></strong></p>
+                <button id="open-github-releases" class="btn-config btn-config-primary">
+                  <span class="material-symbols-outlined">open_in_new</span>
+                  ${t('ui.update.projectPage')}
+                </button>
+              </div>
 
-          <!-- Sección Acerca de -->
-          <div class="config-section" id="about-section">
-            <h3>${t('ui.about.title')}</h3>
-            <div class="about-content">
-              
-              <div class="about-card">
-                <h4>${t('ui.about.information')}</h4>
+              <div class="config-card full-width flex-col">
+                <div class="config-card-info" style="width: 100%;">
+                  <div class="config-card-icon"><span class="material-symbols-outlined">settings_backup_restore</span></div>
+                  <div class="config-card-text">
+                    <p class="title">${t('ui.update.configManagement')}</p>
+                    <p class="desc">${t('ui.update.configNote')}</p>
+                  </div>
+                </div>
+                <p style="margin: 0; font-size: 14px; color: var(--on-surface-variant);"><strong>${t('ui.update.location')}</strong> <span id="config-path">Cargando...</span></p>
+                
+                <div class="input-group">
+                  <button id="backup-config-btn" class="btn-config btn-config-secondary" style="font-size: 14px; padding: 8px 16px;">${t('ui.update.backupConfig')}</button>
+                  <button id="export-config-btn" class="btn-config btn-config-secondary" style="font-size: 14px; padding: 8px 16px;">${t('ui.update.exportConfig')}</button>
+                  <button id="import-config-btn" class="btn-config btn-config-secondary" style="font-size: 14px; padding: 8px 16px;">${t('ui.update.importConfig')}</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="config-section" id="about-section">
+              <div class="config-section-header">
+                <div class="config-section-title">
+                  <span class="material-symbols-outlined text-primary">info</span>
+                  <h3>${t('ui.about.title')}</h3>
+                </div>
+                <span class="config-section-subtitle">${t('ui.about.information')}</span>
+              </div>
+
+              <div class="config-cards-grid">
+                <div class="about-card-modern" style="grid-column: 1 / -1;">
+                  <h4><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 20px;">emoji_people</span>${t('ui.about.information')}</h4>
                   <p>${t('ui.about.welcomeMessage')}</p>
                   <p>${t('ui.about.projectDescription')}</p>
                   <p>${t('ui.about.enjoyMessage')}</p>
-              </div>
+                </div>
 
-              <div class="about-card">
-                <h4>${t('ui.about.disclaimer')}</h4>
+                <div class="about-card-modern" style="grid-column: 1 / -1;">
+                  <h4><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 20px;">gavel</span>${t('ui.about.disclaimer')}</h4>
                   <p>${t('ui.about.noWarranty')}</p>
                   <p>${t('ui.about.userResponsibility')}</p>
                   <p>${t('ui.about.acceptTerms')}</p>
@@ -1771,16 +1904,25 @@ function showConfigModal() {
                   <p>${t('ui.about.trademarks')}</p>
                   <p>${t('ui.about.noAffiliation')}</p>
                   <p>${t('ui.about.copyrightCompliance')}</p>
+                </div>
+
+                <div class="config-card full-width" style="margin-top: 16px; border-color: var(--primary);">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">favorite</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.about.supportProject')}</p>
+                      <p class="desc">${t('ui.about.supportMessage')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <a href="#" id="paypal-donation-link" class="btn-config btn-config-primary" style="text-decoration: none; font-size: 16px; padding: 10px 24px;">
+                      ${t('ui.about.donatePaypal')}
+                    </a>
+                  </div>
+                </div>
               </div>
-              
-              <div class="donation-card">
-                <h4>${t('ui.about.supportProject')}</h4>
-                <p>${t('ui.about.supportMessage')}</p>
-                <a href="#" id="paypal-donation-link" class="donation-link">${t('ui.about.donatePaypal')}</a>
-              </div>
-              
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </div>
@@ -1857,8 +1999,10 @@ function showConfigModal() {
   
   // Función para actualizar el valor mostrado del color
   function updateColorValue(input) {
-    const valueSpan = input.nextElementSibling;
-    valueSpan.textContent = input.value;
+    const valueSpan = input.parentElement.querySelector('.color-value');
+    if (valueSpan) {
+      valueSpan.textContent = input.value;
+    }
   }
   
   // Cargar colores guardados

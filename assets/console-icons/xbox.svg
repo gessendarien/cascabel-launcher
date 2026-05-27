@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <!-- Original Xbox Console (White) -->
+  <path d="M3 5h18v14c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5z" stroke="white" stroke-width="1.5" fill="white" opacity="0.1"/>
+  <!-- Large "X" indentation on top -->
+  <path d="M3 5l7 7m4 0l7-7m-18 16l7-7m4 0l7 7" stroke="white" stroke-width="1.5" opacity="0.3"/>
+  <!-- Central Jewel (Logo) -->
+  <circle cx="12" cy="12" r="3.5" stroke="white" stroke-width="1.5" fill="white" opacity="0.1"/>
+  <!-- Front ridges/DVD drive -->
+  <rect x="6" y="19" width="12" height="2" rx="0.5" fill="none" stroke="white" stroke-width="1"/>
+  <!-- Controller ports (4 distinct small ports) -->
+  <circle cx="5" cy="19.5" r="0.5" fill="white" opacity="0.6"/>
+  <circle cx="7" cy="19.5" r="0.5" fill="white" opacity="0.6"/>
+  <circle cx="17" cy="19.5" r="0.5" fill="white" opacity="0.6"/>
+  <circle cx="19" cy="19.5" r="0.5" fill="white" opacity="0.6"/>
+</svg>

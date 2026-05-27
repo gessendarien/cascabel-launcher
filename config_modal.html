@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#690005",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "surface-container-low": "#1c1b1b",
+                    "inverse-on-surface": "#313030",
+                    "secondary": "#c8c6c5",
+                    "primary-fixed": "#d8e2ff",
+                    "on-primary": "#002e6a",
+                    "surface-bright": "#393939",
+                    "on-secondary": "#303030",
+                    "on-surface": "#e5e2e1",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#e5e2e1",
+                    "secondary-fixed": "#e4e2e1",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#474746",
+                    "tertiary-container": "#df7412",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "surface-container": "#201f1f",
+                    "surface": "#131313",
+                    "surface-container-high": "#2a2a2a",
+                    "primary": "#adc6ff",
+                    "surface-variant": "#353534",
+                    "outline": "#8c909f",
+                    "on-background": "#e5e2e1",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed": "#311400",
+                    "error-container": "#93000a",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "on-primary-fixed": "#001a42",
+                    "surface-container-lowest": "#0e0e0e",
+                    "on-tertiary": "#502400",
+                    "background": "#131313",
+                    "primary-container": "#4d8eff",
+                    "outline-variant": "#424754",
+                    "on-primary-fixed-variant": "#004395",
+                    "inverse-primary": "#005ac2",
+                    "on-tertiary-container": "#461f00",
+                    "surface-dim": "#131313",
+                    "on-secondary-container": "#b6b5b4",
+                    "tertiary-fixed": "#ffdcc6",
+                    "secondary-container": "#474746",
+                    "surface-tint": "#adc6ff",
+                    "surface-container-highest": "#353534",
+                    "on-surface-variant": "#c2c6d6",
+                    "on-primary-container": "#00285d",
+                    "tertiary": "#ffb786"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "container-padding": "40px",
+                    "md": "16px",
+                    "sm": "12px",
+                    "base": "4px",
+                    "gutter": "20px",
+                    "xs": "8px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-xl": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 10px;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex items-center justify-center p-xl">
+<!-- Main Modal Container -->
+<div class="w-full max-w-6xl h-[800px] bg-surface flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-outline-variant relative">
+<!-- TopAppBar -->
+<header class="bg-surface-container text-primary font-headline-sm text-headline-sm relative w-full border-b border-outline-variant flex items-center justify-between px-lg h-16 z-50 shrink-0">
+<div class="flex items-center gap-md cursor-pointer active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">Launcher Settings</span>
+</div>
+<div class="cursor-pointer active:scale-95 hover:bg-secondary-container transition-colors p-base rounded-full">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</div>
+</header>
+<!-- Main Content Layout (Side-by-Side) -->
+<div class="flex flex-1 min-h-0 relative">
+<!-- Sidebar Navigation (NavigationDrawer) -->
+<aside class="w-72 bg-surface-container-low border-r border-outline-variant flex flex-col p-md gap-xl shrink-0 overflow-y-auto">
+<!-- Profile Section -->
+<div class="p-md bg-surface-container-high border border-outline-variant rounded-xl flex flex-col items-center gap-sm">
+<div class="relative group">
+<div class="w-20 h-20 rounded-full border-2 border-primary overflow-hidden shadow-lg bg-surface-container-highest cursor-pointer">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaPsOEM9-IpwAjjJFaG0xYzi8v6dr8DSNcNLfIcfd8X0KdgacvDauT3dpBiqZZENd9Y9QBH3ao1cSTPxUx_JKyBNYqP5NQIQEDtteShzQty0Pk7N0qh0D-ExlzoRUqNBWnLuOlJvCnpxvGfpuAMFgFj9o0QRR_lyRhUDJbNeKUE59uoFi0HwlIWUe5urX03aiJ5ub2If0OR3zmZlquWo8xc7M1eIeFdhRamtwiQ59U1Y2TlU_EkucwvzlLAXMUfZWnJ7dtlJJhdBI"/>
+</div>
+</div>
+<div class="text-center">
+<p class="font-label-md text-label-md text-on-surface-variant">Online • v2.4.0</p>
+</div>
+<button class="w-full bg-surface-container-highest border border-outline-variant text-on-surface px-sm py-xs rounded-lg font-label-md text-label-md hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="photo_camera">photo_camera</span>
+                        Change Photo
+                    </button>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-xs">
+<div class="bg-primary text-on-primary px-md py-sm rounded-lg font-bold font-label-md text-label-md flex items-center gap-md cursor-pointer">
+<span class="material-symbols-outlined" data-icon="desktop_windows">desktop_windows</span>
+                        Interface
+                    </div>
+<div class="text-secondary hover:bg-secondary-container/50 px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-md transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="system_update">system_update</span>
+                        Updates
+                    </div>
+<div class="text-secondary hover:bg-secondary-container/50 px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-md transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+                        About
+                    </div>
+</nav>
+</aside>
+<!-- Main Panel (Theme Configuration) -->
+<main class="flex-1 overflow-y-auto p-xl flex flex-col">
+<div class="max-w-4xl mx-auto w-full flex flex-col h-full">
+<section class="flex flex-col gap-lg">
+<div class="flex items-center justify-between border-b border-outline-variant pb-md">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="palette">palette</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Theme Configuration</h3>
+</div>
+<span class="font-label-md text-label-md text-primary uppercase tracking-widest">Interface</span>
+</div>
+<!-- Configuration Controls -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Header Color Card -->
+<div class="p-lg bg-surface-container-high border border-outline-variant rounded-xl flex items-center justify-between hover:bg-surface-container-highest transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<div class="p-base bg-surface-container-lowest rounded-lg border border-outline-variant group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="format_paint">format_paint</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface">Header Color</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Top navigation accent</p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-md text-label-md font-mono text-on-surface-variant">#FF0000</span>
+<div class="w-10 h-10 rounded-lg border border-outline shadow-inner" style="background-color: #FF0000;"></div>
+</div>
+</div>
+<!-- Active Tab Color Card -->
+<div class="p-lg bg-surface-container-high border border-outline-variant rounded-xl flex items-center justify-between hover:bg-surface-container-highest transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<div class="p-base bg-surface-container-lowest rounded-lg border border-outline-variant group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="tab">tab</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface">Active Tab Color</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Selection highlights</p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-md text-label-md font-mono text-on-surface-variant">#333333</span>
+<div class="w-10 h-10 rounded-lg border border-outline shadow-inner" style="background-color: #333333;"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Sticky/Bottom Action Buttons -->
+<div class="flex justify-end gap-md border-t border-outline-variant pt-lg mt-auto">
+<button class="px-xl py-md bg-transparent border border-outline-variant text-on-surface-variant rounded-lg font-headline-sm text-headline-sm hover:bg-surface-container-highest hover:text-on-surface transition-all active:scale-95">
+                            Discard Changes
+                        </button>
+<button class="px-xl py-md bg-[#3b82f6] text-[#ffffff] rounded-lg font-headline-sm text-headline-sm shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-95">
+                            Save Changes
+                        </button>
+</div>
+</div>
+</main>
+</div>
+</div>
+<script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Subtle interaction logic can go here
+            });
+        });
+    </script>
+</body></html>

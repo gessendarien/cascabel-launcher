@@ -21,6 +21,7 @@ logs
 dist/
 build/
 out/
+output/
 release/
 *.asar
 
@@ -38,6 +39,7 @@ Thumbs.db
 # ─── VSCode / IDE configs ──────────────────
 .vscode/
 .idea/
+.gemini/
 *.swp
 
 # ─── Env files ─────────────────────────────

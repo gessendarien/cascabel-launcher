@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Cascabel Launcher — Cross-platform Game Launcher</title>
+    <meta name="description" content="A cross-platform game launcher for Windows and Linux. Manage multiple emulators with customizable themes, cover art, and background music." />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <style type="text/tailwindcss">
+        :root {
+            --obsidian-black: #f1f5f9;
+            --obsidian-gray: #e2e8f0;
+            --obsidian-accent: #0f172a;
+            --obsidian-muted: #64748b;
+        }
+        @layer base {
+            body {
+                background-color: var(--obsidian-black);
+                color: var(--obsidian-accent);
+                font-family: 'Inter', sans-serif;
+            }
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f172a",
+                        "obsidian": {
+                            DEFAULT: "#f1f5f9",
+                            lighter: "#e2e8f0",
+                            border: "#cbd5e1"
+                        }
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="icon" type="image/png" href="assets/cascabel.png" />
+</head>
+
+<body class="antialiased">
+
+    <!-- LANGUAGE SELECTOR -->
+    <div class="fixed top-4 right-24 z-50">
+        <div
+            class="flex items-center gap-1 bg-white/80 backdrop-blur border border-black/10 shadow-md rounded-full p-1">
+            <button onclick="setLanguage('en')" id="lang-btn-en"
+                class="px-4 py-1.5 rounded-full text-sm font-semibold transition-all bg-slate-900 text-white">
+                English
+            </button>
+            <button onclick="setLanguage('es')" id="lang-btn-es"
+                class="px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">
+                Español
+            </button>
+        </div>
+    </div>
+
+    <div class="relative flex min-h-screen w-full flex-col">
+
+        <main class="flex-1">
+            <!-- HERO -->
+            <section class="max-w-[1200px] mx-auto px-6 pt-24 pb-4 text-center">
+                <div class="flex flex-col items-center gap-6 mb-8">
+                    <img src="assets/cascabel.png" alt="Cascabel Launcher"
+                        class="size-48 object-contain drop-shadow-2xl">
+                    <h2 class="text-primary text-5xl font-bold tracking-tighter">Cascabel</h2>
+                </div>
+                <div class="space-y-6">
+                    <h1
+                        class="text-primary text-6xl md:text-8xl font-bold tracking-tighter leading-[1] max-w-4xl mx-auto">
+                        <span id="hero-title-en">A game launcher <br /> for everyone.</span>
+                        <span id="hero-title-es" class="hidden">Un launcher de juegos <br /> para todos.</span>
+                    </h1>
+                    <p class="text-slate-500 text-xl md:text-2xl font-light max-w-2xl mx-auto leading-relaxed">
+                        <span id="hero-sub-en">Manage multiple emulators with customizable themes, cover art,
+                            background music, and a minimalist interface. Available for Windows and Linux.</span>
+                        <span id="hero-sub-es" class="hidden">Gestiona múltiples emuladores con temas personalizables,
+                            carátulas, música de fondo y una interfaz minimalista. Disponible para Windows y
+                            Linux.</span>
+                    </p>
+                </div>
+
+                <!-- VERSION -->
+                <div class="mt-4 mb-2 flex justify-center items-center gap-2 text-slate-500 font-medium">
+                    <span><span class="i18n-version">Version</span> <span id="app-version">1.0.0</span></span>
+                </div>
+
+                <!-- DOWNLOAD BUTTONS -->
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4 w-full max-w-sm sm:max-w-none mx-auto">
+                    <a href="https://github.com/gessendarien/cascabel-launcher/releases/latest"
+                        class="flex w-full sm:w-60 items-center justify-center gap-3 h-12 rounded-full bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 hover:scale-[1.02] transition-all duration-300 shadow-xl active:scale-95 group">
+                        <span class="material-symbols-outlined text-[20px] transition-colors">install_desktop</span>
+                        <span><span class="i18n-download">Download</span> Windows</span>
+                    </a>
+                    <a href="https://github.com/gessendarien/cascabel-launcher/releases/latest"
+                        class="flex w-full sm:w-60 items-center justify-center gap-3 h-12 rounded-full bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 hover:scale-[1.02] transition-all duration-300 shadow-xl active:scale-95 group">
+                        <span class="material-symbols-outlined text-[20px] transition-colors">package_2</span>
+                        <span><span class="i18n-download">Download</span> Linux</span>
+                    </a>
+                </div>
+
+                <!-- GITHUB LINK -->
+                <div class="mt-4 flex justify-center">
+                    <a href="https://github.com/gessendarien/cascabel-launcher"
+                        class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd"
+                                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span class="i18n-source-code">Source code</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- SCREENSHOT -->
+            <section class="max-w-[1000px] mx-auto px-6 py-8">
+                <div class="rounded-2xl overflow-hidden shadow-2xl border border-black/10">
+                    <img src="screenshot.png" alt="Cascabel Launcher Screenshot"
+                        class="w-full h-auto object-cover" />
+                </div>
+            </section>
+
+            <!-- FEATURES -->
+            <section class="max-w-[1000px] mx-auto px-6 py-16">
+                <h2 class="text-3xl font-bold text-center tracking-tight mb-12">
+                    <span id="features-title-en">Features</span>
+                    <span id="features-title-es" class="hidden">Características</span>
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <!-- Feature 1 -->
+                    <div
+                        class="bg-white/60 backdrop-blur border border-black/5 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <span
+                            class="material-symbols-outlined text-[32px] text-slate-700 mb-3 block">tab_group</span>
+                        <h3 class="font-semibold text-lg mb-1">
+                            <span class="i18n-feat1-title">Multi-emulator Tabs</span>
+                        </h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            <span class="i18n-feat1-desc">Organize your consoles in horizontal tabs. Drag to
+                                reorder, right-click to edit.</span>
+                        </p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div
+                        class="bg-white/60 backdrop-blur border border-black/5 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <span
+                            class="material-symbols-outlined text-[32px] text-slate-700 mb-3 block">palette</span>
+                        <h3 class="font-semibold text-lg mb-1">
+                            <span class="i18n-feat2-title">Customizable Themes</span>
+                        </h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            <span class="i18n-feat2-desc">Personalize the look and feel of the launcher with
+                                different color themes.</span>
+                        </p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div
+                        class="bg-white/60 backdrop-blur border border-black/5 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <span
+                            class="material-symbols-outlined text-[32px] text-slate-700 mb-3 block">music_note</span>
+                        <h3 class="font-semibold text-lg mb-1">
+                            <span class="i18n-feat3-title">Background Music</span>
+                        </h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            <span class="i18n-feat3-desc">Set your own background music to enhance the browsing
+                                experience.</span>
+                        </p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div
+                        class="bg-white/60 backdrop-blur border border-black/5 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <span
+                            class="material-symbols-outlined text-[32px] text-slate-700 mb-3 block">image</span>
+                        <h3 class="font-semibold text-lg mb-1">
+                            <span class="i18n-feat4-title">Cover Art Display</span>
+                        </h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            <span class="i18n-feat4-desc">Show game covers and artwork in a beautiful visual grid
+                                layout.</span>
+                        </p>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div
+                        class="bg-white/60 backdrop-blur border border-black/5 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <span
+                            class="material-symbols-outlined text-[32px] text-slate-700 mb-3 block">sort</span>
+                        <h3 class="font-semibold text-lg mb-1">
+                            <span class="i18n-feat5-title">Smart Sorting</span>
+                        </h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            <span class="i18n-feat5-desc">Sort your games alphabetically or by most played for quick
+                                access.</span>
+                        </p>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div
+                        class="bg-white/60 backdrop-blur border border-black/5 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <span
+                            class="material-symbols-outlined text-[32px] text-slate-700 mb-3 block">save</span>
+                        <h3 class="font-semibold text-lg mb-1">
+                            <span class="i18n-feat6-title">Config Export</span>
+                        </h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            <span class="i18n-feat6-desc">Export and import your configuration to easily migrate
+                                between machines.</span>
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- DISCLAIMER -->
+            <section class="max-w-[800px] mx-auto px-6 py-8">
+                <div class="bg-white/40 backdrop-blur border border-black/5 rounded-2xl p-6">
+                    <h3 class="font-semibold text-sm text-slate-700 mb-2">
+                        <span class="i18n-disclaimer-title">Disclaimer</span>
+                    </h3>
+                    <p class="text-slate-500 text-xs leading-relaxed">
+                        <span class="i18n-disclaimer-text">This program is distributed without any warranty and is
+                            non-profit. Any material configured within the program (game backups, console executables,
+                            cover art, and audio) must be legally owned by you. This launcher is solely a management
+                            tool; it does not distribute or provide any copyrighted material. The user is responsible for
+                            complying with all applicable copyright laws.</span>
+                    </p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="border-t border-black/5 py-8 mt-8">
+            <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <img src="assets/cascabel.png" alt="Cascabel" class="w-8 h-8 object-contain" />
+                    <span class="text-sm font-semibold text-slate-700">Cascabel Launcher</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="https://github.com/gessendarien/cascabel-launcher"
+                        class="text-slate-500 hover:text-slate-700 transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd"
+                                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    <a href="https://paypal.me/gessendarien"
+                        class="text-slate-500 hover:text-slate-700 transition-colors text-sm font-medium">
+                        <span class="i18n-donate">☕ Donate</span>
+                    </a>
+                </div>
+                <p class="text-slate-400 text-xs">
+                    <span class="i18n-license">Licensed under GPL v3.0</span>
+                </p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- LANGUAGE SCRIPT -->
+    <script>
+        const translations = {
+            en: {
+                'hero-title-en': { show: true },
+                'hero-title-es': { show: false },
+                'hero-sub-en': { show: true },
+                'hero-sub-es': { show: false },
+                'features-title-en': { show: true },
+                'features-title-es': { show: false },
+                'i18n-version': 'Version',
+                'i18n-download': 'Download',
+                'i18n-source-code': 'Source code',
+                'i18n-feat1-title': 'Multi-emulator Tabs',
+                'i18n-feat1-desc': 'Organize your consoles in horizontal tabs. Drag to reorder, right-click to edit.',
+                'i18n-feat2-title': 'Customizable Themes',
+                'i18n-feat2-desc': 'Personalize the look and feel of the launcher with different color themes.',
+                'i18n-feat3-title': 'Background Music',
+                'i18n-feat3-desc': 'Set your own background music to enhance the browsing experience.',
+                'i18n-feat4-title': 'Cover Art Display',
+                'i18n-feat4-desc': 'Show game covers and artwork in a beautiful visual grid layout.',
+                'i18n-feat5-title': 'Smart Sorting',
+                'i18n-feat5-desc': 'Sort your games alphabetically or by most played for quick access.',
+                'i18n-feat6-title': 'Config Export',
+                'i18n-feat6-desc': 'Export and import your configuration to easily migrate between machines.',
+                'i18n-disclaimer-title': 'Disclaimer',
+                'i18n-disclaimer-text': 'This program is distributed without any warranty and is non-profit. Any material configured within the program (game backups, console executables, cover art, and audio) must be legally owned by you. This launcher is solely a management tool; it does not distribute or provide any copyrighted material. The user is responsible for complying with all applicable copyright laws.',
+                'i18n-donate': '☕ Donate',
+                'i18n-license': 'Licensed under GPL v3.0',
+            },
+            es: {
+                'hero-title-en': { show: false },
+                'hero-title-es': { show: true },
+                'hero-sub-en': { show: false },
+                'hero-sub-es': { show: true },
+                'features-title-en': { show: false },
+                'features-title-es': { show: true },
+                'i18n-version': 'Versión',
+                'i18n-download': 'Descargar',
+                'i18n-source-code': 'Código fuente',
+                'i18n-feat1-title': 'Pestañas multi-emulador',
+                'i18n-feat1-desc': 'Organiza tus consolas en pestañas horizontales. Arrastra para reordenar, clic derecho para editar.',
+                'i18n-feat2-title': 'Temas personalizables',
+                'i18n-feat2-desc': 'Personaliza la apariencia del launcher con diferentes temas de color.',
+                'i18n-feat3-title': 'Música de fondo',
+                'i18n-feat3-desc': 'Configura tu propia música de fondo para mejorar la experiencia.',
+                'i18n-feat4-title': 'Carátulas de juegos',
+                'i18n-feat4-desc': 'Muestra las portadas y arte de tus juegos en una cuadrícula visual.',
+                'i18n-feat5-title': 'Orden inteligente',
+                'i18n-feat5-desc': 'Ordena tus juegos alfabéticamente o por los más jugados.',
+                'i18n-feat6-title': 'Exportar configuración',
+                'i18n-feat6-desc': 'Exporta e importa tu configuración para migrar fácilmente entre equipos.',
+                'i18n-disclaimer-title': 'Aviso legal',
+                'i18n-disclaimer-text': 'Este programa se distribuye sin ninguna garantía y sin fines de lucro. Todo material configurado en el programa (respaldos de juegos, ejecutables, carátulas y audio) debe ser de tu propiedad legal. Este launcher es únicamente una herramienta de gestión; no distribuye ni provee material protegido por derechos de autor. El usuario es responsable de cumplir con las leyes de derechos de autor aplicables.',
+                'i18n-donate': '☕ Donar',
+                'i18n-license': 'Licencia GPL v3.0',
+            }
+        };
+
+        let currentLang = localStorage.getItem('cascabel-lang') || 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('cascabel-lang', lang);
+
+            const t = translations[lang];
+
+            // Toggle visibility of id-based elements
+            for (const [key, val] of Object.entries(t)) {
+                if (typeof val === 'object' && 'show' in val) {
+                    const el = document.getElementById(key);
+                    if (el) {
+                        el.classList.toggle('hidden', !val.show);
+                    }
+                }
+            }
+
+            // Update text of class-based elements
+            for (const [key, val] of Object.entries(t)) {
+                if (typeof val === 'string') {
+                    document.querySelectorAll('.' + key).forEach(el => {
+                        el.textContent = val;
+                    });
+                }
+            }
+
+            // Update language buttons
+            const btnEn = document.getElementById('lang-btn-en');
+            const btnEs = document.getElementById('lang-btn-es');
+            if (lang === 'en') {
+                btnEn.className = 'px-4 py-1.5 rounded-full text-sm font-semibold transition-all bg-slate-900 text-white';
+                btnEs.className = 'px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-slate-600 hover:text-slate-900';
+            } else {
+                btnEs.className = 'px-4 py-1.5 rounded-full text-sm font-semibold transition-all bg-slate-900 text-white';
+                btnEn.className = 'px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-slate-600 hover:text-slate-900';
+            }
+
+            // Update html lang
+            document.documentElement.lang = lang;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+    </script>
+
+</body>
+
+</html>

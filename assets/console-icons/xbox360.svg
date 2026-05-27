@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <!-- Xbox 360 Console (White, Vertical stance) -->
+  <path d="M9 3c-1 0-2 .5-2 1.5v15c0 1 1 1.5 2 1.5h6c1 0 2-.5 2-1.5v-15C17 3.5 16 3 15 3H9z" stroke="white" stroke-width="1.5" fill="white" opacity="0.1"/>
+  <!-- Curved waist effect (the 360's iconic concave middle) -->
+  <path d="M7 3q3 9 0 18" stroke="white" stroke-width="1" opacity="0.3" fill="none"/>
+  <path d="M17 3q-3 9 0 18" stroke="white" stroke-width="1" opacity="0.3" fill="none"/>
+  <!-- Disc Drive -->
+  <rect x="9" y="5" width="6" height="1.5" rx="0.5" fill="white" opacity="0.5"/>
+  <!-- Ring of Light (Power Button) -->
+  <circle cx="12" cy="15" r="1.5" stroke="white" stroke-width="1" fill="none"/>
+  <circle cx="12" cy="15" r="0.5" fill="white"/>
+</svg>

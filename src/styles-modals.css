@@ -116,156 +116,509 @@
   padding: 0 24px 24px 24px;
 }
 
-/* Estilos para el modal de configuración con diseño dashboard */
-.config-sidebar {
-  width: 200px;
-  background: #2a2a2a;
-  border-right: 1px solid #3a3a3a;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+/* ==========================================================================
+   NUEVO DISEÑO DEL MODAL DE CONFIGURACIÓN (TIPO TAILWIND)
+   ========================================================================== */
+
+/* Variables de tema para el modal de configuración */
+.config-modal-container {
+  --surface-container-lowest: #0e0e0e;
+  --surface: #131313;
+  --surface-container-low: #1c1b1b;
+  --surface-container: #201f1f;
+  --surface-container-high: #2a2a2a;
+  --surface-container-highest: #353534;
+  --primary: #adc6ff;
+  --on-primary: #002e6a;
+  --on-surface: #e5e2e1;
+  --on-surface-variant: #c2c6d6;
+  --outline-variant: #424754;
+  --outline: #8c909f;
+  --secondary: #c8c6c5;
+  --secondary-container: #474746;
+  
+  font-family: 'Inter', sans-serif;
+  color: var(--on-surface);
+  box-sizing: border-box;
 }
 
-.config-menu {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 0;
+.config-modal-container * {
+  box-sizing: border-box;
 }
 
-.config-menu-item {
+.config-modal {
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  border: 1px solid var(--outline-variant);
+  animation: modal-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.config-header {
+  background: var(--surface-container);
+  color: var(--primary);
+  border-bottom: 1px solid var(--outline-variant);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 64px;
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.config-header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.config-close-btn {
   background: transparent;
   border: none;
-  color: #bbb;
-  padding: 16px 24px;
-  text-align: left;
+  color: var(--on-surface);
   cursor: pointer;
-  font-size: 14px;
-  border-bottom: 1px solid #3a3a3a;
-  transition: all 0.2s ease;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
 }
 
-.config-menu-item:hover {
-  background: #3a3a3a;
-  color: #fff;
+.config-close-btn:hover {
+  background: var(--secondary-container);
 }
 
-.config-menu-item.active {
-  background: #4a90e2;
-  color: #fff;
-}
-
-.config-content {
+.config-body {
+  display: flex;
   flex: 1;
-  padding: 32px;
-  background: #1e1e1e;
+  min-height: 0;
+  position: relative;
+}
+
+.config-sidebar {
+  width: 288px;
+  background: var(--surface-container-low);
+  border-right: 1px solid var(--outline-variant);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 32px;
+  flex-shrink: 0;
   overflow-y: auto;
+}
+
+/* Perfil de usuario en sidebar */
+.config-profile-card {
+  padding: 16px;
+  background: var(--surface-container-high);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.config-profile-image-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: var(--surface-container-highest);
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.config-profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-position: center;
+  background-size: cover;
+}
+
+.config-profile-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 4px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-container-high);
+  cursor: pointer;
+  transition: filter 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.config-profile-edit:hover {
+  filter: brightness(1.1);
+}
+
+.config-profile-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin: 0;
+  text-align: center;
+}
+
+.config-profile-status {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  text-align: center;
+}
+
+.config-profile-btn {
+  width: 100%;
+  background: var(--surface-container-highest);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.config-profile-btn:hover {
+  filter: brightness(1.1);
+}
+
+.config-profile-btn:active {
+  transform: scale(0.95);
+}
+
+/* Navegación lateral */
+.config-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.config-nav-item:hover {
+  background: rgba(71, 71, 70, 0.5); /* secondary-container con opacidad */
+}
+
+.config-nav-item.active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.config-nav-item .material-symbols-outlined {
+  font-size: 24px;
+}
+
+/* Área de contenido principal */
+.config-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 32px 0;
+  background: var(--surface);
 }
 
 .config-section {
   display: none;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 896px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 32px;
 }
 
 .config-section.active {
-  display: block;
+  display: flex;
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-.config-section h3 {
-  color: #fff;
-  font-size: 24px;
-  margin: 0 0 8px 0;
-}
-
-.config-section p {
-  color: #bbb;
-  margin: 0 0 24px 0;
-  font-size: 14px;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: #fff;
-}
-
-.btn-secondary:hover {
-  background: #5a6268;
-}
-
-/* Estilos para el selector de colores */
-.color-customizer {
-  background: #2a2a2a;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.color-option {
+.config-section-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid #3a3a3a;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--outline-variant);
+  padding-bottom: 16px;
+  margin-bottom: 8px;
 }
 
-.color-option:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.color-option label {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  flex: 1;
-}
-
-.color-input-group {
+.config-section-title {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.color-input-group input[type="color"] {
-  width: 40px;
-  height: 40px;
-  border: 2px solid #3a3a3a;
-  border-radius: 6px;
-  cursor: pointer;
-  background: transparent;
+.config-section-title h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin: 0;
 }
 
-.color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+.config-section-subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Tarjetas de configuración (Cards) */
+.config-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .config-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.config-card {
+  padding: 24px;
+  background: var(--surface-container-high);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.2s;
+}
+
+.config-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.config-card.flex-col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.config-card:hover {
+  background: var(--surface-container-highest);
+}
+
+.config-card-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.config-card-icon {
+  padding: 8px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  transition: border-color 0.2s;
+}
+
+.config-card:hover .config-card-icon {
+  border-color: var(--primary);
+}
+
+.config-card-text p.title {
+  font-size: 16px;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.config-card-text p.desc {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.config-card-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Botones en la parte inferior */
+.config-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 24px;
+  margin-top: auto;
+}
+
+.btn-config {
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-config:active {
+  transform: scale(0.95);
+}
+
+.btn-config-secondary {
+  background: transparent;
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface-variant);
+}
+
+.btn-config-secondary:hover {
+  background: var(--surface-container-highest);
+  color: var(--on-surface);
+}
+
+.btn-config-primary {
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+}
+
+.btn-config-primary:hover {
+  filter: brightness(1.1);
+}
+
+/* Modificaciones específicas para elementos de formulario en el nuevo diseño */
+.config-card input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.config-card input[type="color"]::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
-.color-input-group input[type="color"]::-webkit-color-swatch {
+.config-card input[type="color"]::-webkit-color-swatch {
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-.color-value {
-  color: #bbb;
-  font-family: monospace;
-  font-size: 12px;
-  background: #1e1e1e;
-  padding: 4px 8px;
-  border-radius: 4px;
-  min-width: 70px;
-  text-align: center;
+.config-card select {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 100%;
+  cursor: pointer;
 }
 
-.theme-actions {
+.config-card select:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.config-card input[type="text"] {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  flex: 1;
+}
+
+.config-card input[type="text"]:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.config-card input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* Layout flex para inputs compuestos */
+.input-group {
   display: flex;
+  width: 100%;
   gap: 12px;
-  justify-content: flex-end;
-  margin-top: 30px;
+  align-items: center;
+}
+
+.about-card-modern {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  padding: 16px;
+  width: 100%;
+}
+
+.about-card-modern h4 {
+  color: var(--primary);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.about-card-modern p {
+  margin: 0 0 8px 0;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+
+.about-card-modern ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--on-surface-variant);
+}
+
+.about-card-modern li {
+  margin-bottom: 8px;
 }
 
 /* Estilos para la sección Acerca de */

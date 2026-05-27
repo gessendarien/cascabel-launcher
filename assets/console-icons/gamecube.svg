@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <!-- GameCube Console -->
+  <!-- Top Square shape -->
+  <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.5" fill="white" opacity="0.1"/>
+  <!-- Disc Lid (Large Center Circle) -->
+  <circle cx="12" cy="12" r="5.5" stroke="white" stroke-width="1.2" fill="none"/>
+  <circle cx="12" cy="12" r="2.5" fill="white" opacity="0.1"/>
+  <!-- Power Button (Left) -->
+  <circle cx="6.5" cy="18" r="1" fill="white" opacity="0.6"/>
+  <!-- Reset Button (Middle-Left) -->
+  <circle cx="9.5" cy="18" r="0.7" fill="white" opacity="0.6"/>
+  <!-- Open Button (Right) -->
+  <circle cx="17.5" cy="18" r="1" fill="white" opacity="0.6"/>
+  <!-- Controller Ports (Front edge indicator) -->
+  <rect x="4" y="21" width="16" height="2" fill="white" opacity="0.2"/>
+</svg>

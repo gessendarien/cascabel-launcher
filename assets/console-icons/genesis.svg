@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <!-- Sega Genesis Console (White) -->
+  <rect x="2" y="4" width="20" height="16" rx="2" stroke="white" stroke-width="1.5" fill="white" opacity="0.1"/>
+  <!-- Circular dome in center -->
+  <circle cx="12" cy="13" r="6" stroke="white" stroke-width="1" fill="none" opacity="0.4"/>
+  <!-- Cartridge slot -->
+  <rect x="8" y="7" width="8" height="2.5" rx="0.5" stroke="white" stroke-width="1.2" fill="none"/>
+  <!-- Power button -->
+  <rect x="4" y="14" width="2" height="3" rx="0.5" fill="white" opacity="0.7"/>
+  <!-- Reset button -->
+  <circle cx="18" cy="15" r="1" fill="white" opacity="0.7"/>
+  <!-- Volume slider (Model 1) -->
+  <rect x="5" y="10" width="1.5" height="3" rx="0.5" fill="white" opacity="0.4"/>
+</svg>

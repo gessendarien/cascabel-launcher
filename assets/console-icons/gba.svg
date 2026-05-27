@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <!-- Game Boy Advance Console (White) -->
+  <path d="M4 7C2 7 0.5 8.5 0.5 10.5v3c0 2 1.5 3.5 3.5 3.5h16c2 0 3.5-1.5 3.5-3.5v-3C23.5 8.5 22 7 20 7H4z" stroke="white" stroke-width="1.5" fill="white" opacity="0.1"/>
+  <!-- Screen -->
+  <rect x="7" y="8.5" width="10" height="7" rx="0.5" stroke="white" stroke-width="0.8" fill="white" opacity="0.12"/>
+  <!-- D-pad -->
+  <rect x="2" y="11" width="2.8" height="1" rx="0.2" fill="white"/>
+  <rect x="2.9" y="9.8" width="1" height="3.2" rx="0.2" fill="white"/>
+  <!-- A & B buttons -->
+  <circle cx="20" cy="11" r="1.1" fill="white"/>
+  <circle cx="21.5" cy="12.8" r="1.1" fill="white"/>
+  <!-- Shoulder buttons -->
+  <rect x="2.5" y="7" width="4" height="1" rx="0.5" fill="white" opacity="0.4"/>
+  <rect x="17.5" y="7" width="4" height="1" rx="0.5" fill="white" opacity="0.4"/>
+</svg>

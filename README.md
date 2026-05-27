@@ -1,76 +1,62 @@
 # Cascabel Launcher
 
-Launcher de juegos multiplataforma para Windows y Linux.
+Cross-platform game launcher for Windows and Linux.
 
 
 ![Cascabel Launcher](screenshot.png)
 
-## Instrucciones
+## Instructions
 
-- Agrega una consola
-- Coloca nombre y tipo de consola
-- Selecciona la ruta del ejecutable
-- Selecciona la ruta de juegos
-- Selecciona la ruta de las carátulas
+- Add a console
+- Set the name and console type
+- Select the executable path
+- Select the games folder path
+- Select the cover art folder path
 
-**Importante**: El nombre de los juegos y el de las carátulas deben coindidir, es decir debe tener cada juego el mismo nombre de su carátula.
+**Important**: Game filenames and their cover art filenames must match — each game must have the same name as its corresponding cover image.
 
-## Características
+## Features
 
-- Gestión de múltiples emuladores con pestañas horizontales
-- Configuración de rutas ejecutables, juegos y carátulas
-- Temas personalizables
-- Opción de música de fondo
-- Orden alfabético o por más jugados
-- Imagen de perfil configurable
-- Guardado de configuración para migrar
+- Multi-emulator management with horizontal tabs
+- Configuration of executable, games, and cover art paths
+- Customizable themes
+- Background music option
+- Sort alphabetically or by most played
+- Configurable profile picture
+- Save configuration for migration
 
-## Instalación
+## Installation
 
-Usa Cascabel Launcher como cualquier programa descargándolo de la sección de releases, disponible para Windows y Linux:
+Use Cascabel Launcher like any other program by downloading it from the releases section, available for Windows and Linux:
 
-**[Descargar Cascabel Launcher para mi sistema operativo](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
+**[Download Cascabel Launcher for my operating system](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
 
-Versión actual: 1.0.0
+Current version: 1.0.0
 
-## Desarrolladores
-Si lo prefieres puedes ejecutar el código fuente clonando el repositorio:
+## Usage
 
-1. Clona este repositorio
-2. Instala las dependencias:
-```
-npm install
-```
-3. Inicia la aplicación:
-```
-npm start
-```
-
-
-## Uso
-
-- Haz clic en el botón de configuración (el perrito)
-- Agrega una nueva pestaña, ruta ejecutable, carpeta de los respaldos de tus juegos y la ruta de las imágenes de tus juegos
-- Configura la carpeta de carátulas con imágenes de las portadas o arte
-- Guarda la configuración
-- Navega entre las pestañas para ver tus diferentes respaldos agrupados por consola
-- Arrastra las pestañas sobre su eje para organizarlas
-- Da click derecho sobre las pestañas para editarlas u ordenar el contenido
-- Si llenas la barra, puedes hacer scroll con la rueda del mouse por todas las pestañas
+- Click the settings button (the little dog)
+- Add a new tab, executable path, game backups folder, and cover art images folder
+- Set up the cover art folder with game covers or artwork
+- Save the configuration
+- Navigate between tabs to see your different backups grouped by console
+- Drag the tabs along their axis to rearrange them
+- Right-click on tabs to edit them or sort the content
+- If the tab bar is full, you can scroll through all tabs with the mouse wheel
 
 ## Disclaimer
 
-**Importante**: Este programa se distribuye sin ninguna garantía de uso y sin fines de lucro. El material que es configurado dentro del programa (backups de juegos, ejecutables de consolas, carátulas o imágenes, y audios) debe ser de tu autoría y debes poseer legalmente los derechos para utilizarlo. Este launcher es únicamente una herramienta de gestión y organización; por lo que no distribuye, alienta, incita ni provee ningún material total o parcial protegido bajo derechos de autor. El usuario es responsable de cumplir con todas las leyes de derechos de autor aplicables en su jurisdicción.
+**Important**: This program is distributed without any warranty and is non-profit. Any material configured within the program (game backups, console executables, cover art or images, and audio) must be your own creation and you must legally own the rights to use it. This launcher is solely a management and organization tool; it does not distribute, encourage, incite, or provide any material, in whole or in part, protected under copyright law. The user is responsible for complying with all applicable copyright laws in their jurisdiction.
 
-## Licencia
+## License
 
 GNU General Public License v3.0
 
 
-## Gracias
+## Thanks
 
-Si te gusta este proyecto y quieres apoyar su desarrollo, puedes hacer una donación a través de PayPal:
+If you like this project and want to support its development, you can make a donation through PayPal:
 
-[![Donar con PayPal](https://www.paypalobjects.com/es_ES/ES/i/btn/btn_donateCC_LG.gif)](https://paypal.me/gessendarien)
+[![Donate with PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/gessendarien)
 
-¡Cualquier contribución es apreciada y ayuda a mantener el proyecto activo! 🐶🧡
+Any contribution is appreciated and helps keep the project alive! 🐶🧡
