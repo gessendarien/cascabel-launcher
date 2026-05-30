@@ -1944,13 +1944,13 @@ function showConfigModal() {
                     <div class="config-card-icon"><span class="material-symbols-outlined">language</span></div>
                     <div class="config-card-text">
                       <p class="title">Web</p>
-                      <p class="desc">${t('about.viewWebsite') || 'Ir al sitio web del proyecto'}</p>
+                      <p class="desc">${t('ui.about.viewWebsite') || 'Ir al sitio web del proyecto'}</p>
                     </div>
                   </div>
                   <div class="config-card-action">
                     <button id="open-github-releases" class="btn-config btn-config-secondary" style="font-size: 14px; padding: 8px 16px;">
                       <span class="material-symbols-outlined">open_in_new</span>
-                      ${t('about.viewWebsiteBtn') || 'Ir al sitio web'}
+                      ${t('ui.about.viewWebsiteBtn') || 'Ir al sitio web'}
                     </button>
                   </div>
                 </div>
