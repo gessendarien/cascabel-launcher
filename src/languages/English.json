@@ -67,7 +67,12 @@
       "selectAudioPlaceholder": " Select an audio file",
       "applyTheme": "Apply Theme",
       "resetDefault": "Reset to Default",
-      "themeApplied": "Theme applied successfully"
+      "themeApplied": "Theme applied successfully",
+      "iconNone": "None",
+      "iconConsole": "Console",
+      "iconController": "Controller",
+      "tabIconStyle": "Tab Icon Style",
+      "tabIconStyleDesc": "Choose console or controller icon"
     },
     "update": {
       "title": "How to update",
@@ -84,7 +89,15 @@
       "backupConfig": "Create backup",
       "exportConfig": "Export config",
       "importConfig": "Import config",
-      "configNote": "Your configuration (consoles, themes, paths) is automatically preserved during updates. Backups are automatically created before importing configurations."
+      "configNote": "Your configuration (consoles, themes, paths) is automatically preserved during updates. Backups are automatically created before importing configurations.",
+      "checkForUpdates": "Check for updates",
+      "checkingUpdates": "Checking for updates...",
+      "newVersionAvailable": "There is a new version available:",
+      "downloadUpdate": "Download update",
+      "downloadingUpdate": "Downloading update...",
+      "updateDownloadedSuccess": "Update downloaded successfully",
+      "updateError": "Error checking for updates:",
+      "noDownloads": "No compatible downloads found in the release."
     },
     "about": {
       "title": "About Cascabel Launcher",
@@ -102,7 +115,9 @@
       "copyrightCompliance": "The user is solely responsible for complying with all applicable copyright laws in their jurisdiction.",
       "supportProject": "Support the project",
       "supportMessage": "If you like Cascabel Launcher, you can support its development:",
-      "donatePaypal": "Donate via PayPal"
+      "donatePaypal": "Support",
+      "viewWebsite": "Go to the project website",
+      "viewWebsiteBtn": "Go to website"
     },
     "messages": {
       "deleteConfirm": "Are you sure you want to delete",

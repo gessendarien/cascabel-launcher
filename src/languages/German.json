@@ -67,7 +67,12 @@
       "selectAudioPlaceholder": " Audio-Datei auswählen",
       "applyTheme": "Theme anwenden",
       "resetDefault": "Auf Standard zurücksetzen",
-      "themeApplied": "Theme erfolgreich angewendet"
+      "themeApplied": "Theme erfolgreich angewendet",
+      "iconNone": "Keiner",
+      "iconConsole": "Konsole",
+      "iconController": "Controller",
+      "tabIconStyle": "Registerkarten-Symbol",
+      "tabIconStyleDesc": "Wählen Sie Konsolen- oder Controller-Symbol"
     },
     "update": {
       "title": "Wie aktualisieren",
@@ -84,7 +89,15 @@
       "backupConfig": "Sicherung erstellen",
       "exportConfig": "Konfiguration exportieren",
       "importConfig": "Konfiguration importieren",
-      "configNote": "Ihre Konfiguration (Konsolen, Themes, Pfade) wird bei Aktualisierungen automatisch beibehalten. Sicherungen werden automatisch vor dem Import von Konfigurationen erstellt."
+      "configNote": "Ihre Konfiguration (Konsolen, Themes, Pfade) wird bei Aktualisierungen automatisch beibehalten. Sicherungen werden automatisch vor dem Import von Konfigurationen erstellt.",
+      "checkForUpdates": "Nach Updates suchen",
+      "checkingUpdates": "Suche nach Updates...",
+      "newVersionAvailable": "Eine neue Version ist verfügbar:",
+      "downloadUpdate": "Update herunterladen",
+      "downloadingUpdate": "Herunterladen...",
+      "updateDownloadedSuccess": "Update erfolgreich heruntergeladen",
+      "updateError": "Fehler bei der Suche nach Updates:",
+      "noDownloads": "Keine kompatiblen Downloads in dieser Version gefunden."
     },
     "about": {
       "title": "Über Cascabel Launcher",
@@ -102,7 +115,9 @@
       "copyrightCompliance": "Der Benutzer ist allein verantwortlich für die Einhaltung aller anwendbaren Urheberrechtsgesetze in seiner Rechtsprechung.",
       "supportProject": "Projekt unterstützen",
       "supportMessage": "Wenn Ihnen Cascabel Launcher gefällt, können Sie dessen Entwicklung unterstützen:",
-      "donatePaypal": "Über PayPal spenden"
+      "donatePaypal": "Unterstützen",
+      "viewWebsite": "Gehen Sie zur Projekt-Website",
+      "viewWebsiteBtn": "Zur Website"
     },
     "messages": {
       "deleteConfirm": "Sind Sie sicher, dass Sie löschen möchten",

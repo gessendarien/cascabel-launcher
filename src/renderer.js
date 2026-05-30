@@ -718,6 +718,39 @@ function getConsoleSvg(iconType) {
   </svg>`;
 }
 
+// Generar icono SVG del control (gamepad)
+function getControllerSvg(iconType) {
+  if (!iconType) iconType = 'otra';
+  const key = String(iconType).toLowerCase();
+  
+  try {
+    const svgPath = path.join(__dirname, '..', 'assets', 'controller-icons', `${key}.svg`);
+    if (fs.existsSync(svgPath)) {
+      return fs.readFileSync(svgPath, 'utf8');
+    }
+  } catch (error) {
+    console.error('Error loading controller icon:', error);
+  }
+  
+  // Fallback if file not found
+  try {
+    const fallbackPath = path.join(__dirname, '..', 'assets', 'controller-icons', 'otra.svg');
+    if (fs.existsSync(fallbackPath)) {
+      return fs.readFileSync(fallbackPath, 'utf8');
+    }
+  } catch (error) {
+    // Silently ignore
+  }
+  
+  // Ultimate fallback inline SVG (generic gamepad)
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="controller-icon">
+    <rect x="2" y="6" width="20" height="12" rx="5" ry="5" fill="currentColor" fill-opacity="0.1" stroke="currentColor"></rect>
+    <path d="M6 12h4M8 10v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+    <circle cx="15" cy="13" r="1.5" fill="currentColor" stroke="none"></circle>
+    <circle cx="17.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"></circle>
+  </svg>`;
+}
+
 // Renderizar las pestañas de emuladores
 function renderTabs() {
   const nav = document.getElementById('emulator-tabs');
@@ -815,11 +848,8 @@ function renderTabs() {
     tab.className = 'tab' + (idx === 0 ? ' selected' : '');
     tab.draggable = true; // Hacer la pestaña arrastrable
     
-    // Generar el icono SVG de la consola basado en su tipo
-    const iconSvg = getConsoleSvg(emu.icon);
-    
-    // Mostramos icono y nombre
-    tab.innerHTML = `${iconSvg} <span>${emu.name}</span>`;
+    // Mostramos solo el nombre, ya no hay iconos en las pestañas
+    tab.innerHTML = `<span>${emu.name}</span>`;
     
     // Click izquierdo para seleccionar pestaña
     tab.addEventListener('click', function(e) {
@@ -1650,7 +1680,6 @@ function showConfigModal() {
                 <div id="profile-image-preview" class="config-profile-image" style="cursor: pointer;" title="${t('ui.configuration.profileImage')}"></div>
               </div>
               <input id="profile-image-input" type="file" accept="image/*" style="display: none;" />
-              <div class="config-profile-status">Cascabel v1.0.0</div>
               <button class="config-profile-btn" id="profile-remove-btn" style="display: none; margin-top: 8px;">
                 <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
                 ${t('ui.buttons.clear')}
@@ -1771,6 +1800,9 @@ function showConfigModal() {
                   </div>
                 </div>
 
+                <!-- Tab Icon Style Section -->
+
+
                 <!-- Language Section -->
                 <div class="config-card full-width">
                   <div class="config-card-info">
@@ -1843,19 +1875,20 @@ function showConfigModal() {
               </div>
               
               <div class="config-card full-width flex-col">
-                <div class="about-card-modern">
-                  <ul>
-                    <li>${t('ui.update.instructions.0')}</li>
-                    <li>${t('ui.update.instructions.1')}</li>
-                    <li>${t('ui.update.instructions.2')}</li>
-                    <li>${t('ui.update.instructions.3')}</li>
-                  </ul>
-                </div>
+
                 <p class="current-version" style="font-size: 16px; margin: 0; color: var(--on-surface);">${t('ui.update.currentVersion')} <strong style="color: var(--primary);"></strong></p>
-                <button id="open-github-releases" class="btn-config btn-config-primary">
-                  <span class="material-symbols-outlined">open_in_new</span>
-                  ${t('ui.update.projectPage')}
-                </button>
+                
+                <div id="github-update-container" style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                  <button id="check-github-update-btn" class="btn-config btn-config-primary">
+                    <span class="material-symbols-outlined">sync</span>
+                    ${t('ui.update.checkForUpdates') || 'Check for updates'}
+                  </button>
+                  <div id="github-update-status" style="font-size: 14px; display: none; margin-top: 8px; color: var(--on-surface-variant);"></div>
+                  <button id="download-github-update-btn" class="btn-config btn-config-primary" style="display: none; background-color: #28a745; margin-top: 8px;">
+                    <span class="material-symbols-outlined">download</span>
+                    ${t('ui.update.downloadUpdate') || 'Download update'}
+                  </button>
+                </div>
               </div>
 
               <div class="config-card full-width flex-col">
@@ -1904,6 +1937,22 @@ function showConfigModal() {
                   <p>${t('ui.about.trademarks')}</p>
                   <p>${t('ui.about.noAffiliation')}</p>
                   <p>${t('ui.about.copyrightCompliance')}</p>
+                </div>
+
+                <div class="config-card full-width" style="margin-top: 16px;">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">language</span></div>
+                    <div class="config-card-text">
+                      <p class="title">Web</p>
+                      <p class="desc">${t('about.viewWebsite') || 'Ir al sitio web del proyecto'}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action">
+                    <button id="open-github-releases" class="btn-config btn-config-secondary" style="font-size: 14px; padding: 8px 16px;">
+                      <span class="material-symbols-outlined">open_in_new</span>
+                      ${t('about.viewWebsiteBtn') || 'Ir al sitio web'}
+                    </button>
+                  </div>
                 </div>
 
                 <div class="config-card full-width" style="margin-top: 16px; border-color: var(--primary);">
@@ -2051,7 +2100,7 @@ function showConfigModal() {
       config.theme = {};
     }
     
-    // Guardar los colores en la configuración
+    // Guardar los colores y estilos en la configuración
     config.theme.headerColor = headerColor;
     config.theme.tabSelectedColor = tabSelectedColor;
     config.theme.tabHoverColor = tabHoverColor;
@@ -2080,36 +2129,49 @@ function showConfigModal() {
     // Aplicar colores a las pestañas usando la función centralizada
     applyTabColors();
     
+    // Volver a renderizar las pestañas para aplicar cambios de iconos
+    renderTabs();
+    
     // Mostrar notificación menos intrusiva en lugar de alert
     const notification = document.createElement('div');
     notification.className = 'theme-notification';
     notification.textContent = t('ui.messages.themeApplied');
     notification.style.cssText = `
       position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #4a90e2;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 5px;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary, #db2424);
+      color: var(--on-primary, white);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       z-index: 10000;
-      animation: slideIn 0.3s ease;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     `;
     
     document.body.appendChild(notification);
     
-    // Remover la notificación después de 3 segundos
+    // Trigger animation to slide down
+    setTimeout(() => {
+      notification.style.top = '20px';
+      notification.style.opacity = '1';
+    }, 10);
+    
+    // Remover la notificación después de 1 segundo
     setTimeout(() => {
       if (notification.parentNode) {
+        notification.style.top = '-100px';
         notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.3s ease';
         setTimeout(() => {
           if (notification.parentNode) {
             notification.remove();
           }
-        }, 300);
+        }, 400); // wait for transition to finish
       }
-    }, 3000);
+    }, 1500); // 1.5 seconds total (giving it ~1s to stay)
   }
   
   // Función para restablecer tema por defecto
@@ -2221,7 +2283,103 @@ function showConfigModal() {
   // Event listeners para el nuevo sistema de actualizaciones manuales
   document.getElementById('open-github-releases')?.addEventListener('click', () => {
     const { shell } = require('electron');
-    shell.openExternal('https://github.com/gessendarien/cascabel-launcher/releases');
+    shell.openExternal('https://gessendarien.github.io/cascabel-launcher');
+  });
+  
+  // Lógica para comprobar y descargar actualizaciones
+  let currentDownloadUrl = '';
+  document.getElementById('check-github-update-btn')?.addEventListener('click', async () => {
+    const checkBtn = document.getElementById('check-github-update-btn');
+    const downloadBtn = document.getElementById('download-github-update-btn');
+    const statusDiv = document.getElementById('github-update-status');
+    
+    checkBtn.disabled = true;
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">sync</span> ${t('ui.update.checkingUpdates') || 'Checking...\\'}`;
+    downloadBtn.style.display = 'none';
+
+    try {
+      const result = await ipcRenderer.invoke('check-update-github');
+      if (result.success) {
+        const latestTagStr = result.tag.replace(/^v/, '');
+        const appInfo = await ipcRenderer.invoke('get-app-info');
+        const currentVersionStr = appInfo.version.replace(/^v/, '');
+        
+        // Custom simple version comparison
+        const v1parts = latestTagStr.split('.').map(Number);
+        const v2parts = currentVersionStr.split('.').map(Number);
+        let isNewer = false;
+        
+        for (let i = 0; i < Math.max(v1parts.length, v2parts.length); ++i) {
+            const v1 = v1parts[i] || 0;
+            const v2 = v2parts[i] || 0;
+            if (v1 > v2) { isNewer = true; break; }
+            if (v1 < v2) { break; }
+        }
+        
+        if (isNewer) {
+          statusDiv.style.color = '#28a745';
+          statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">new_releases</span> <strong>${t('ui.update.newVersionAvailable') || 'New version available:'} ${latestTagStr}</strong>`;
+          
+          const isWindows = navigator.userAgent.toLowerCase().indexOf('win') > -1;
+          const isLinux = navigator.userAgent.toLowerCase().indexOf('linux') > -1;
+          
+          let targetAsset = null;
+          if (result.assets && result.assets.length > 0) {
+            if (isWindows) {
+              targetAsset = result.assets.find(a => a.name.toLowerCase().endsWith('.exe'));
+            } else if (isLinux) {
+              targetAsset = result.assets.find(a => a.name.toLowerCase().endsWith('.appimage'));
+            }
+          }
+          
+          if (targetAsset) {
+            currentDownloadUrl = targetAsset.url;
+            downloadBtn.style.display = 'inline-flex';
+          } else {
+            statusDiv.innerHTML += `<br>${t('ui.update.noDownloads') || 'No compatible downloads found in the release.'}`;
+          }
+        } else {
+          statusDiv.style.color = 'var(--on-surface-variant)';
+          statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">check_circle</span> ${t('ui.messages.usingLatestVersion') || 'You are using the latest version'}`;
+        }
+      } else {
+        statusDiv.style.color = '#dc3545';
+        statusDiv.textContent = `${t('ui.update.updateError') || 'Error:'} ${result.error}`;
+      }
+    } catch (err) {
+      statusDiv.style.color = '#dc3545';
+      statusDiv.textContent = `${t('ui.update.updateError') || 'Error:'} ${err.message}`;
+    } finally {
+      checkBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('download-github-update-btn')?.addEventListener('click', async () => {
+    const downloadBtn = document.getElementById('download-github-update-btn');
+    const statusDiv = document.getElementById('github-update-status');
+    
+    downloadBtn.disabled = true;
+    statusDiv.style.color = 'var(--on-surface-variant)';
+    statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">downloading</span> ${t('ui.update.downloadingUpdate') || 'Downloading update...\\'}`;
+    
+    try {
+      const result = await ipcRenderer.invoke('download-github-update', currentDownloadUrl);
+      if (result.success) {
+        statusDiv.style.color = '#28a745';
+        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">download_done</span> <strong>${t('ui.update.updateDownloadedSuccess') || 'Update downloaded successfully'}</strong><br><small>${result.filePath}</small>`;
+      } else if (result.canceled) {
+        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">cancel</span> Download canceled.`;
+      } else {
+        statusDiv.style.color = '#dc3545';
+        statusDiv.textContent = `${t('ui.update.updateError') || 'Error:'} ${result.error}`;
+      }
+    } catch (err) {
+      statusDiv.style.color = '#dc3545';
+      statusDiv.textContent = `${t('ui.update.updateError') || 'Error:'} ${err.message}`;
+    } finally {
+      downloadBtn.disabled = false;
+    }
   });
   
   document.getElementById('auto-updates-enabled')?.addEventListener('change', async (e) => {
@@ -2439,7 +2597,7 @@ function showConfigModal() {
     // Actualizar la versión actual en la sección de actualización
     const versionElement = document.querySelector('.current-version strong');
     if (versionElement) {
-      versionElement.textContent = `v${appInfo.version}`;
+      versionElement.textContent = `${appInfo.version}`;
     }
   }).catch(console.error);
 }

@@ -67,7 +67,12 @@
       "selectAudioPlaceholder": " Selecciona un archivo de audio",
       "applyTheme": "Aplicar Tema",
       "resetDefault": "Restablecer por Defecto",
-      "themeApplied": "Tema aplicado correctamente"
+      "themeApplied": "Tema aplicado correctamente",
+      "iconNone": "Ninguno",
+      "iconConsole": "Consola",
+      "iconController": "Control",
+      "tabIconStyle": "Estilo de icono de pestaña",
+      "tabIconStyleDesc": "Elige entre icono de consola o control"
     },
     "update": {
       "title": "Cómo actualizar",
@@ -84,7 +89,15 @@
       "backupConfig": "Crear backup",
       "exportConfig": "Exportar config",
       "importConfig": "Importar config",
-      "configNote": "Tu configuración (emuladores, temas, rutas) se conserva automáticamente durante las actualizaciones. Los backups se crean automáticamente antes de importar configuraciones."
+      "configNote": "Tu configuración (emuladores, temas, rutas) se conserva automáticamente durante las actualizaciones. Los backups se crean automáticamente antes de importar configuraciones.",
+      "checkForUpdates": "Comprobar actualizaciones",
+      "checkingUpdates": "Comprobando actualizaciones...",
+      "newVersionAvailable": "Hay una nueva versión disponible:",
+      "downloadUpdate": "Descargar actualización",
+      "downloadingUpdate": "Descargando actualización...",
+      "updateDownloadedSuccess": "Actualización descargada correctamente",
+      "updateError": "Error al buscar actualizaciones:",
+      "noDownloads": "No se encontraron archivos compatibles en este Release."
     },
     "about": {
       "title": "Acerca de Cascabel Launcher",
@@ -102,7 +115,9 @@
       "copyrightCompliance": "El usuario es el único responsable de cumplir con todas las leyes de derechos de autor aplicables en su jurisdicción.",
       "supportProject": "Apoyar el proyecto",
       "supportMessage": "Si te gusta Cascabel Launcher, puedes apoyar su desarrollo:",
-      "donatePaypal": "Donar via PayPal"
+      "donatePaypal": "Apoyar",
+      "viewWebsite": "Ir al sitio web del proyecto",
+      "viewWebsiteBtn": "Ir al sitio web"
     },
     "messages": {
       "deleteConfirm": "¿Estás seguro de que deseas eliminar",

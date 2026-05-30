@@ -67,7 +67,12 @@
       "selectAudioPlaceholder": " Selecionar um arquivo de áudio",
       "applyTheme": "Aplicar Tema",
       "resetDefault": "Redefinir para Padrão",
-      "themeApplied": "Tema aplicado com sucesso"
+      "themeApplied": "Tema aplicado com sucesso",
+      "iconNone": "Nenhum",
+      "iconConsole": "Console",
+      "iconController": "Controle",
+      "tabIconStyle": "Estilo do ícone da aba",
+      "tabIconStyleDesc": "Escolha o ícone do console ou controle"
     },
     "update": {
       "title": "Como atualizar",
@@ -84,7 +89,15 @@
       "backupConfig": "Criar backup",
       "exportConfig": "Exportar configuração",
       "importConfig": "Importar configuração",
-      "configNote": "Sua configuração (consoles, temas, caminhos) é automaticamente preservada durante as atualizações. Backups são criados automaticamente antes de importar configurações."
+      "configNote": "Sua configuração (consoles, temas, caminhos) é automaticamente preservada durante as atualizações. Backups são criados automaticamente antes de importar configurações.",
+      "checkForUpdates": "Verificar atualizações",
+      "checkingUpdates": "Verificando atualizações...",
+      "newVersionAvailable": "Há uma nova versão disponível:",
+      "downloadUpdate": "Baixar atualização",
+      "downloadingUpdate": "Baixando atualização...",
+      "updateDownloadedSuccess": "Atualização baixada com sucesso",
+      "updateError": "Erro ao verificar atualizações:",
+      "noDownloads": "Nenhum arquivo compatível encontrado neste Release."
     },
     "about": {
       "title": "Sobre o Cascabel Launcher",
@@ -102,7 +115,9 @@
       "copyrightCompliance": "O usuário é o único responsável por cumprir todas as leis de direitos autorais aplicáveis em sua jurisdição.",
       "supportProject": "Apoiar o projeto",
       "supportMessage": "Se você gosta do Cascabel Launcher, pode apoiar seu desenvolvimento:",
-      "donatePaypal": "Doar via PayPal"
+      "donatePaypal": "Apoiar",
+      "viewWebsite": "Ir para o site do projeto",
+      "viewWebsiteBtn": "Ir para o site"
     },
     "messages": {
       "deleteConfirm": "Tem certeza de que deseja excluir",

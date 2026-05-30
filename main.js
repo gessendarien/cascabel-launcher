@@ -322,6 +322,117 @@ ipcMain.handle('install-update', async () => {
   }
 });
 
+// Sistema de actualizaciones manual vía GitHub
+ipcMain.handle('check-update-github', async () => {
+  return new Promise((resolve) => {
+    const { net } = require('electron');
+    const request = net.request({
+      method: 'GET',
+      protocol: 'https:',
+      hostname: 'api.github.com',
+      path: '/repos/gessendarien/cascabel-launcher/releases/latest',
+      headers: {
+        'User-Agent': 'Cascabel-Launcher',
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    request.on('response', (response) => {
+      let data = '';
+      response.on('data', (chunk) => { data += chunk; });
+      response.on('end', () => {
+        if (response.statusCode === 200) {
+          try {
+            const release = JSON.parse(data);
+            resolve({ success: true, tag: release.tag_name, assets: release.assets });
+          } catch (err) {
+            resolve({ success: false, error: err.message });
+          }
+        } else {
+          resolve({ success: false, error: `HTTP ${response.statusCode}` });
+        }
+      });
+    });
+    request.on('error', (err) => {
+      resolve({ success: false, error: err.message });
+    });
+    request.end();
+  });
+});
+
+ipcMain.handle('download-github-update', async (event, assetUrl) => {
+  try {
+    const isWindows = process.platform === 'win32';
+    const isAppImage = process.env.APPIMAGE;
+    
+    // Suggest the current file name
+    let defaultFileName = 'Cascabel.exe';
+    if (isWindows) {
+      defaultFileName = path.basename(process.execPath);
+    } else if (isAppImage) {
+      defaultFileName = path.basename(process.env.APPIMAGE);
+    } else {
+      defaultFileName = 'Cascabel.AppImage';
+    }
+
+    const { filePath } = await dialog.showSaveDialog({
+      title: 'Guardar actualización',
+      defaultPath: defaultFileName,
+      buttonLabel: 'Guardar'
+    });
+
+    if (!filePath) {
+      return { success: false, canceled: true };
+    }
+
+    return new Promise((resolve) => {
+      const { net } = require('electron');
+      // Set the Accept header to get the binary asset
+      const request = net.request({
+        method: 'GET',
+        url: assetUrl,
+        headers: {
+          'User-Agent': 'Cascabel-Launcher',
+          'Accept': 'application/octet-stream'
+        }
+      });
+      
+      request.on('response', (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          const redirectReq = net.request(response.headers.location);
+          redirectReq.on('response', (res) => {
+            if (res.statusCode !== 200) {
+              resolve({ success: false, error: `HTTP ${res.statusCode} en redirección` });
+              return;
+            }
+            const file = fs.createWriteStream(filePath);
+            res.on('data', (chunk) => { file.write(chunk); });
+            res.on('end', () => {
+              file.end();
+              resolve({ success: true, filePath });
+            });
+          });
+          redirectReq.on('error', (err) => resolve({ success: false, error: err.message }));
+          redirectReq.end();
+        } else if (response.statusCode === 200) {
+          const file = fs.createWriteStream(filePath);
+          response.on('data', (chunk) => { file.write(chunk); });
+          response.on('end', () => {
+            file.end();
+            resolve({ success: true, filePath });
+          });
+        } else {
+          resolve({ success: false, error: `HTTP ${response.statusCode}` });
+        }
+      });
+      request.on('error', (err) => resolve({ success: false, error: err.message }));
+      request.end();
+    });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('get-update-settings', async () => {
   const configPath = path.join(app.getPath('userData'), 'config.json');
   let config = {};

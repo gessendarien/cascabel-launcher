@@ -65,6 +65,13 @@ if [ -f "package.json" ]; then
   echo -e "  ${GREEN}✔${NC} package.json"
 fi
 
+# ── 1b. package-lock.json ───────────────────
+if [ -f "package-lock.json" ]; then
+  sed -i "1,20s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package-lock.json
+  UPDATED_FILES+=("package-lock.json")
+  echo -e "  ${GREEN}✔${NC} package-lock.json"
+fi
+
 # ── 2. README.md ────────────────────────────
 if [ -f "README.md" ]; then
   sed -i "s/Current version: $CURRENT_VERSION/Current version: $NEW_VERSION/" README.md
