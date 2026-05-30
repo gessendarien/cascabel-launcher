@@ -97,7 +97,8 @@
       "downloadingUpdate": "Téléchargement en cours...",
       "updateDownloadedSuccess": "Mise à jour téléchargée avec succès",
       "updateError": "Erreur lors de la recherche de mises à jour :",
-      "noDownloads": "Aucun fichier compatible trouvé dans cette version."
+      "noDownloads": "Aucun fichier compatible trouvé dans cette version.",
+      "restartToUpdate": "Fermez l'application et exécutez le nouveau fichier téléchargé."
     },
     "about": {
       "title": "À propos de Cascabel Launcher",

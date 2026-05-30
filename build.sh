@@ -61,8 +61,9 @@ check_dependencies() {
 }
 
 clean_output() {
-  echo -e "${YELLOW}Cleaning output directory...${NC}"
+  echo -e "${YELLOW}Cleaning output and dist directories...${NC}"
   rm -rf "$OUTPUT_DIR"
+  rm -rf "$DIST_DIR"
   mkdir -p "$OUTPUT_DIR"
 }
 

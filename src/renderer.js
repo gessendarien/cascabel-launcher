@@ -2288,6 +2288,7 @@ function showConfigModal() {
   
   // Lógica para comprobar y descargar actualizaciones
   let currentDownloadUrl = '';
+  let currentDownloadName = '';
   document.getElementById('check-github-update-btn')?.addEventListener('click', async () => {
     const checkBtn = document.getElementById('check-github-update-btn');
     const downloadBtn = document.getElementById('download-github-update-btn');
@@ -2335,6 +2336,7 @@ function showConfigModal() {
           
           if (targetAsset) {
             currentDownloadUrl = targetAsset.url;
+            currentDownloadName = targetAsset.name;
             downloadBtn.style.display = 'inline-flex';
           } else {
             statusDiv.innerHTML += `<br>${t('ui.update.noDownloads') || 'No compatible downloads found in the release.'}`;
@@ -2364,20 +2366,26 @@ function showConfigModal() {
     statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">downloading</span> ${t('ui.update.downloadingUpdate') || 'Downloading update...\\'}`;
     
     try {
-      const result = await ipcRenderer.invoke('download-github-update', currentDownloadUrl);
+      const result = await ipcRenderer.invoke('download-github-update', { url: currentDownloadUrl, name: currentDownloadName });
       if (result.success) {
         statusDiv.style.color = '#28a745';
-        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">download_done</span> <strong>${t('ui.update.updateDownloadedSuccess') || 'Update downloaded successfully'}</strong><br><small>${result.filePath}</small>`;
+        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">download_done</span> <strong>${t('ui.update.updateDownloadedSuccess') || 'Update downloaded successfully'}</strong><br><small>${result.filePath}</small><br><br><span style="color: var(--on-surface); font-weight: 500;">${t('ui.update.restartToUpdate') || 'Close the application and run the newly downloaded file.'}</span>`;
+        
+        const checkBtn = document.getElementById('check-github-update-btn');
+        if (checkBtn) checkBtn.disabled = true;
+        
+        downloadBtn.style.display = 'none';
       } else if (result.canceled) {
         statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">cancel</span> Download canceled.`;
+        downloadBtn.disabled = false;
       } else {
         statusDiv.style.color = '#dc3545';
         statusDiv.textContent = `${t('ui.update.updateError') || 'Error:'} ${result.error}`;
+        downloadBtn.disabled = false;
       }
     } catch (err) {
       statusDiv.style.color = '#dc3545';
       statusDiv.textContent = `${t('ui.update.updateError') || 'Error:'} ${err.message}`;
-    } finally {
       downloadBtn.disabled = false;
     }
   });

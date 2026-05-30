@@ -97,7 +97,8 @@
       "downloadingUpdate": "Herunterladen...",
       "updateDownloadedSuccess": "Update erfolgreich heruntergeladen",
       "updateError": "Fehler bei der Suche nach Updates:",
-      "noDownloads": "Keine kompatiblen Downloads in dieser Version gefunden."
+      "noDownloads": "Keine kompatiblen Downloads in dieser Version gefunden.",
+      "restartToUpdate": "Schließen Sie die Anwendung und führen Sie die neu heruntergeladene Datei aus."
     },
     "about": {
       "title": "Über Cascabel Launcher",

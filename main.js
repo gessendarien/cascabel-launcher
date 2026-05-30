@@ -360,29 +360,47 @@ ipcMain.handle('check-update-github', async () => {
   });
 });
 
-ipcMain.handle('download-github-update', async (event, assetUrl) => {
+ipcMain.handle('download-github-update', async (event, options) => {
   try {
+    const assetUrl = typeof options === 'string' ? options : options.url;
+    const releaseName = typeof options === 'string' ? assetUrl.substring(assetUrl.lastIndexOf('/') + 1) : options.name;
     const isWindows = process.platform === 'win32';
     const isAppImage = process.env.APPIMAGE;
     
-    // Suggest the current file name
+    // Suggest the current file name and directory
     let defaultFileName = 'Cascabel.exe';
+    let currentAppPath = process.execPath;
+    
     if (isWindows) {
       defaultFileName = path.basename(process.execPath);
     } else if (isAppImage) {
+      currentAppPath = process.env.APPIMAGE;
       defaultFileName = path.basename(process.env.APPIMAGE);
     } else {
       defaultFileName = 'Cascabel.AppImage';
+      currentAppPath = path.join(process.cwd(), defaultFileName);
     }
 
-    const { filePath } = await dialog.showSaveDialog({
+    const { filePath: selectedFilePath } = await dialog.showSaveDialog({
       title: 'Guardar actualización',
-      defaultPath: defaultFileName,
+      defaultPath: currentAppPath,
       buttonLabel: 'Guardar'
     });
 
-    if (!filePath) {
+    if (!selectedFilePath) {
       return { success: false, canceled: true };
+    }
+
+    let filePath = selectedFilePath;
+    const selectedDir = path.dirname(selectedFilePath);
+    const currentDir = path.dirname(currentAppPath);
+    const selectedName = path.basename(selectedFilePath);
+
+    // If saved in a different folder, and they kept the default name, use the release name
+    if (selectedDir !== currentDir && selectedName === defaultFileName) {
+       if (releaseName && !releaseName.includes('?')) {
+           filePath = path.join(selectedDir, releaseName);
+       }
     }
 
     return new Promise((resolve) => {
@@ -405,22 +423,50 @@ ipcMain.handle('download-github-update', async (event, assetUrl) => {
               resolve({ success: false, error: `HTTP ${res.statusCode} en redirección` });
               return;
             }
-            const file = fs.createWriteStream(filePath);
+            const tempFilePath = filePath + '.download';
+            const file = fs.createWriteStream(tempFilePath);
             res.on('data', (chunk) => { file.write(chunk); });
             res.on('end', () => {
-              file.end();
-              resolve({ success: true, filePath });
+              file.end(() => {
+                try {
+                  if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                  }
+                  fs.renameSync(tempFilePath, filePath);
+                  if (filePath.toLowerCase().endsWith('.appimage')) {
+                    fs.chmodSync(filePath, 0o755);
+                  }
+                  resolve({ success: true, filePath });
+                } catch (err) {
+                  resolve({ success: false, error: err.message });
+                }
+              });
             });
+            file.on('error', (err) => resolve({ success: false, error: err.message }));
           });
           redirectReq.on('error', (err) => resolve({ success: false, error: err.message }));
           redirectReq.end();
         } else if (response.statusCode === 200) {
-          const file = fs.createWriteStream(filePath);
+          const tempFilePath = filePath + '.download';
+          const file = fs.createWriteStream(tempFilePath);
           response.on('data', (chunk) => { file.write(chunk); });
           response.on('end', () => {
-            file.end();
-            resolve({ success: true, filePath });
+            file.end(() => {
+              try {
+                if (fs.existsSync(filePath)) {
+                  fs.unlinkSync(filePath);
+                }
+                fs.renameSync(tempFilePath, filePath);
+                if (filePath.toLowerCase().endsWith('.appimage')) {
+                  fs.chmodSync(filePath, 0o755);
+                }
+                resolve({ success: true, filePath });
+              } catch (err) {
+                resolve({ success: false, error: err.message });
+              }
+            });
           });
+          file.on('error', (err) => resolve({ success: false, error: err.message }));
         } else {
           resolve({ success: false, error: `HTTP ${response.statusCode}` });
         }

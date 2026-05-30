@@ -97,7 +97,8 @@
       "downloadingUpdate": "Descargando actualización...",
       "updateDownloadedSuccess": "Actualización descargada correctamente",
       "updateError": "Error al buscar actualizaciones:",
-      "noDownloads": "No se encontraron archivos compatibles en este Release."
+      "noDownloads": "No se encontraron archivos compatibles en este Release.",
+      "restartToUpdate": "Cierra la aplicación y ejecuta la nueva descarga."
     },
     "about": {
       "title": "Acerca de Cascabel Launcher",

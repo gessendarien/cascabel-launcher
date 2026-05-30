@@ -97,7 +97,8 @@
       "downloadingUpdate": "Downloading update...",
       "updateDownloadedSuccess": "Update downloaded successfully",
       "updateError": "Error checking for updates:",
-      "noDownloads": "No compatible downloads found in the release."
+      "noDownloads": "No compatible downloads found in the release.",
+      "restartToUpdate": "Close the application and run the newly downloaded file."
     },
     "about": {
       "title": "About Cascabel Launcher",
