@@ -986,6 +986,17 @@ function selectTab(idx) {
     gamesToShow.forEach(game => {
       const gameCard = document.createElement('div');
       gameCard.className = 'game-card';
+      
+      // Adaptar proporciones de carátula según consola
+      if (emu && emu.icon) {
+        const iconName = String(emu.icon).toLowerCase();
+        const horizontalConsoles = ['snes', 'n64', 'genesis', 'md', 'smd', 'psp', 'gba'];
+        const isHorizontal = horizontalConsoles.some(c => iconName.includes(c));
+        gameCard.classList.add(isHorizontal ? 'cover-horizontal' : 'cover-vertical');
+      } else {
+        gameCard.classList.add('cover-vertical');
+      }
+      
       gameCard.setAttribute('data-title', game.name); // Agregar título como atributo para tooltip
       
       const gameCover = document.createElement('div');
@@ -1383,6 +1394,17 @@ function renderSortedGames(games, emulator) {
   games.forEach(game => {
     const gameCard = document.createElement('div');
     gameCard.className = 'game-card';
+    
+    // Adaptar proporciones de carátula según consola
+    if (emulator && emulator.icon) {
+      const iconName = String(emulator.icon).toLowerCase();
+      const horizontalConsoles = ['snes', 'n64', 'genesis', 'md', 'smd', 'psp', 'gba'];
+      const isHorizontal = horizontalConsoles.some(c => iconName.includes(c));
+      gameCard.classList.add(isHorizontal ? 'cover-horizontal' : 'cover-vertical');
+    } else {
+      gameCard.classList.add('cover-vertical');
+    }
+    
     gameCard.setAttribute('data-title', game.name);
     
     const gameCover = document.createElement('div');

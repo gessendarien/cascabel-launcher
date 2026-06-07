@@ -27,13 +27,13 @@ Cross-platform game launcher for Windows and Linux.
 
 ## Installation
 
-### 🐧 Linux
+### Linux
 
 You can download the compiled AppImage directly from the releases section:
 
 **[Download Cascabel Launcher for Linux (.AppImage)](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
 
-### 🪟 Windows
+### Windows
 
 To install on Windows, you must compile the application yourself. Run the `build.sh` script (e.g., using Git Bash or WSL) and select option 2 from the menu:
 
@@ -42,7 +42,7 @@ To install on Windows, you must compile the application yourself. Run the `build
 # Select option [2] Build for Windows (.exe)
 ```
 
-Current version: 1.1.0
+Current version: 1.1.1
 
 ## Usage
 
@@ -70,4 +70,4 @@ If you like this project and want to support its development, you can make a don
 
 [![Donate with PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/gessendarien)
 
-Any contribution is appreciated and helps keep the project alive! 🐶🧡
+Any contribution is appreciated and helps keep the project alive!
