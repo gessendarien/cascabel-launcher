@@ -372,7 +372,53 @@ async function saveConfig() {
     await ipcRenderer.invoke('save-config', config);
   } catch (error) {
     console.error('Error saving configuration:', error);
+    showTopNotification(`${t('ui.messages.errorSaving') || 'Error al guardar:'} ${error.message}`, 'error');
   }
+}
+
+// Mostrar notificación flotante que emerge debajo de la barra superior
+function showTopNotification(message, type = 'success') {
+  const existing = document.querySelector('.theme-notification');
+  if (existing) {
+    existing.remove();
+  }
+
+  const emulatorTabs = document.getElementById('emulator-tabs');
+  const headerBottom = emulatorTabs ? emulatorTabs.getBoundingClientRect().bottom : 65;
+
+  const notification = document.createElement('div');
+  notification.className = 'theme-notification';
+  
+  const icon = type === 'error' ? 'error' : 'check_circle';
+  notification.innerHTML = `
+    <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1; vertical-align: middle; color: var(--header-color, #db2424);">${icon}</span>
+    <span style="vertical-align: middle;">${message}</span>
+  `;
+
+  notification.style.top = `${headerBottom}px`;
+  notification.style.transform = 'translateX(-50%) translateY(-100%)';
+  notification.style.opacity = '0';
+
+  document.body.appendChild(notification);
+
+  // Animar para que salga desde detrás de la barra superior
+  setTimeout(() => {
+    notification.style.transform = 'translateX(-50%) translateY(12px)';
+    notification.style.opacity = '1';
+  }, 20);
+
+  // Auto-ocultar regresando detrás de la barra superior
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.style.transform = 'translateX(-50%) translateY(-100%)';
+      notification.style.opacity = '0';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.remove();
+        }
+      }, 400);
+    }
+  }, 1800);
 }
 
 // Aplicar colores a las pestañas según su estado
@@ -2720,46 +2766,8 @@ function showConfigModal() {
     // Volver a renderizar las pestañas para aplicar cambios de iconos o modo
     renderTabs();
     
-    // Mostrar notificación menos intrusiva en lugar de alert
-    const notification = document.createElement('div');
-    notification.className = 'theme-notification';
-    notification.textContent = t('ui.messages.themeApplied');
-    notification.style.cssText = `
-      position: fixed;
-      top: -100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--primary, #db2424);
-      color: var(--on-primary, white);
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      z-index: 10000;
-      opacity: 0;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Trigger animation to slide down
-    setTimeout(() => {
-      notification.style.top = '20px';
-      notification.style.opacity = '1';
-    }, 10);
-    
-    // Remover la notificación después de 1 segundo
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.style.top = '-100px';
-        notification.style.opacity = '0';
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.remove();
-          }
-        }, 400); // wait for transition to finish
-      }
-    }, 1500); // 1.5 seconds total (giving it ~1s to stay)
+    // Mostrar notificación emergente debajo de la barra superior
+    showTopNotification(t('ui.messages.themeApplied') || 'Tema aplicado correctamente', 'success');
   }
   
   // Función para restablecer tema por defecto

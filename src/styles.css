@@ -44,6 +44,7 @@ body {
   align-items: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   position: relative;
+  z-index: 50;
 }
 
 /* Contenedor de pestañas con flexbox */
@@ -973,8 +974,24 @@ button:hover {
 }
 
 .theme-notification {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  background: var(--main-background-color, #222222) !important;
+  border: 2px solid var(--header-color, #db2424) !important;
+  color: var(--tab-text-color, #ffffff) !important;
+  padding: 10px 24px;
+  border-radius: 8px;
   font-weight: 500;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  z-index: 45;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Badge flotante para escaneo y descarga de carátulas con Cascabel Covers */
