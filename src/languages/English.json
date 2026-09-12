@@ -42,14 +42,23 @@
       "consoleType": "Console",
       "executablePath": "Executable path",
       "gamesPath": "Games path",
-      "coversPath": "Covers path",
-      "coverNote": "The image must match the game name (jpg, jpeg, png, gif, bmp or webp)."
+      "coversPath": "Covers folder",
+      "coverNote": "Covers not found can be placed automatically or manually in this folder with the same name as the game.",
+      "file": "Executable",
+      "systemApp": "Installed",
+      "selectSystemAppTitle": "System Applications",
+      "searchAppsPlaceholder": "Search application or emulator...",
+      "filterGamesEmulators": "Games & Emulators",
+      "filterAllApps": "All Applications",
+      "noAppsFound": "No applications found",
+      "execPlaceholder": "File path or system command"
     },
     "configuration": {
       "title": "Configuration",
       "themeConfig": "Theme Configuration",
       "themeDescription": "Customize Cascabel Launcher colors",
       "profileImage": "Profile Image",
+      "removeProfilePhoto": "Remove photo",
       "headerColor": "Header color:",
       "tabSelected": "Selected tab:",
       "tabHover": "Tab hover:",
@@ -66,13 +75,24 @@
       "audioNote": "Supported formats: MP3, OGG, WAV",
       "selectAudioPlaceholder": " Select an audio file",
       "applyTheme": "Apply Theme",
+      "saveConfig": "Save Configuration",
       "resetDefault": "Reset to Default",
       "themeApplied": "Theme applied successfully",
       "iconNone": "None",
       "iconConsole": "Console",
       "iconController": "Controller",
       "tabIconStyle": "Tab Icon Style",
-      "tabIconStyleDesc": "Choose console or controller icon"
+      "tabIconStyleDesc": "Choose console or controller icon",
+      "tabStyle": "Tab Style",
+      "tabStyleDesc": "Choose icons and text, text only, or icons only",
+      "tabStyleBoth": "Icons and text",
+      "tabStyleText": "Text only",
+      "tabStyleIcons": "Icons only",
+      "tabAlignment": "Tab Alignment",
+      "tabAlignmentDesc": "Tab positioning in header (left, center, right)",
+      "alignLeft": "Left",
+      "alignCenter": "Center",
+      "alignRight": "Right"
     },
     "update": {
       "title": "How to update",
@@ -169,7 +189,11 @@
       "noGamesFoundTitle": "No games found",
       "selectOtherFolderButton": "Select another folder",
       "errorLoadingGamesTitle": "Error loading games",
-      "retryButton": "Retry"
+      "retryButton": "Retry",
+      "confirmResetTheme": "Do you want to reset theme colors and style to default values?",
+      "confirmResetThemeWarning": "Visual customization will be restored to defaults. Configured consoles and games will NOT be affected.",
+      "restartApp": "Restart application",
+      "updateRestartPrompt": "Update downloaded and installed. Click to restart and launch the new version."
     },
     "contextMenu": {
       "edit": "Edit",
@@ -177,7 +201,9 @@
       "addTab": "Add tab",
       "closeTab": "Close tab",
       "sort": "Sort",
-      "search": "Search"
+      "search": "Search",
+      "scanCovers": "Rescan games and covers",
+      "removeCover": "Remove cover"
     }
   }
 }

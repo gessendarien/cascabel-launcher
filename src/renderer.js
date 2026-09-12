@@ -1,7 +1,13 @@
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const coverScraper = require('./coverScraper');
 let config = { emulators: [] };
+
+// Cache en memoria para juegos y DOM de cada emulador (evita relectura y re-renderizado al navegar entre pestañas)
+const emulatorGamesCache = new Map();
+const emulatorDOMCache = new Map();
+const emulatorScrapedSet = new Set();
 
 // Variables globales para internacionalización
 let currentLanguage = {};
@@ -50,13 +56,54 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadConfig() {
   try {
     const loaded = await ipcRenderer.invoke('load-config');
-    if (loaded) config = loaded;
+    if (loaded) {
+      config = loaded;
+      emulatorGamesCache.clear();
+      emulatorDOMCache.clear();
+      emulatorScrapedSet.clear();
+    }
     renderTabs();
     applySavedTheme(); // Aplicar tema guardado
     loadBackgroundMusic(); // Cargar música de fondo
     await loadLanguage(); // Cargar idioma
   } catch (error) {
     console.error('Error loading configuration:', error);
+  }
+}
+
+// Actualizar la imagen de perfil en todos los lugares (navbar y modal si está abierto)
+function globalUpdateProfileImage() {
+  const hasCustomPhoto = !!(config.theme && config.theme.profileImage);
+  
+  // 1. Imagen en navbar
+  const profileImage = document.querySelector('.profile-image-navbar');
+  if (profileImage) {
+    profileImage.src = hasCustomPhoto ? config.theme.profileImage : '../assets/cascabel.png';
+  }
+
+  // 2. Modal de configuración (vista previa y clases)
+  const profilePreview = document.getElementById('profile-image-preview');
+  const profileContainer = document.querySelector('.config-profile-image-container') || document.querySelector('.profile-image-container');
+  const profileCard = document.querySelector('.config-profile-card');
+  const profileWrapper = document.querySelector('.config-profile-wrapper');
+  const profileRemoveHover = document.getElementById('profile-remove-hover-text');
+  
+  if (profilePreview) {
+    if (hasCustomPhoto) {
+      profilePreview.style.backgroundImage = `url(${config.theme.profileImage})`;
+      if (profileContainer) profileContainer.classList.add('has-custom-image');
+      if (profileCard) profileCard.classList.add('has-custom-image');
+      if (profileWrapper) profileWrapper.classList.add('has-custom-image');
+      if (profileRemoveHover) profileRemoveHover.style.display = 'block';
+    } else {
+      profilePreview.style.backgroundImage = 'url(../assets/cascabel.png)';
+      if (profileContainer) profileContainer.classList.remove('has-custom-image');
+      if (profileCard) profileCard.classList.remove('has-custom-image');
+      if (profileWrapper) profileWrapper.classList.remove('has-custom-image');
+      if (profileRemoveHover) profileRemoveHover.style.display = 'none';
+    }
+    profilePreview.style.backgroundSize = 'cover';
+    profilePreview.style.backgroundPosition = 'center';
   }
 }
 
@@ -383,79 +430,143 @@ async function loadGames(emulator) {
     
     // Extensiones comunes de ROMs por sistema
     const romExtensions = {
-      'nes': ['.nes'],
-      'snes': ['.sfc', '.smc'],
-      'ps1': ['.iso', '.bin', '.img', '.cue'],
-      'ps2': ['.iso', '.bin', '.img', '.cue'],
-      'psp': ['.iso', '.cso', '.pbp'],
-      'n64': ['.n64', '.z64', '.v64'],
-      'gamecube': ['.iso', '.gcm', '.dol'],
-      'wii': ['.iso', '.wbfs', '.gcz', '.wad'],
-      'wiiu': ['.wud', '.wux', '.iso'],
-      'switch': ['.xci', '.nsp', '.nro'],
-      'gameboy': ['.gb'],
-      'gbc': ['.gbc'],
-      'gba': ['.gba'],
-      'ds': ['.nds'],
-      '3ds': ['.3ds', '.cia', '.cci'],
+      'nes': ['.nes', '.fds', '.unf', '.unif', '.zip', '.7z'],
+      'snes': ['.sfc', '.smc', '.snes', '.fig', '.swc', '.zip', '.7z'],
+      'ps1': ['.iso', '.bin', '.img', '.cue', '.chd', '.pbp', '.m3u', '.cso'],
+      'ps2': ['.iso', '.bin', '.img', '.cue', '.chd', '.gz', '.cso', '.m3u', '.elf'],
+      'psp': ['.iso', '.cso', '.pbp', '.chd'],
+      'n64': ['.n64', '.z64', '.v64', '.zip', '.7z'],
+      'gamecube': ['.iso', '.gcm', '.dol', '.rvz', '.ciso', '.tgc'],
+      'wii': ['.iso', '.wbfs', '.gcz', '.wad', '.rvz', '.ciso', '.wua'],
+      'wiiu': ['.wud', '.wux', '.iso', '.rpx', '.wua'],
+      'switch': ['.xci', '.nsp', '.nro', '.nsz', '.xcz'],
+      'gameboy': ['.gb', '.zip', '.7z'],
+      'gbc': ['.gbc', '.zip', '.7z'],
+      'gba': ['.gba', '.bin', '.zip', '.7z'],
+      'ds': ['.nds', '.dsi', '.zip', '.7z'],
+      '3ds': ['.3ds', '.cia', '.cci', '.cxi', '.3dsx'],
       'xbox': ['.iso', '.xbe'],
-      'xbox360': ['.iso', '.xex'],
-      'genesis': ['.gen', '.md', '.smd', '.bin'],
-      'dreamcast': ['.cdi', '.gdi', '.iso'],
-      'mame': ['.zip', '.7z'],
-      'otra': ['.rom', '.zip', '.7z', '.iso', '.bin'],
-      'default': ['.rom', '.zip', '.7z', '.iso', '.bin']
+      'xbox360': ['.iso', '.xex', '.god'],
+      'genesis': ['.gen', '.md', '.smd', '.bin', '.sg', '.68k', '.zip', '.7z'],
+      'dreamcast': ['.cdi', '.gdi', '.iso', '.chd', '.cue'],
+      'mame': ['.zip', '.7z', '.chd'],
+      'otra': ['.rom', '.zip', '.7z', '.iso', '.bin', '.cue', '.chd', '.exe', '.appimage'],
+      'default': ['.rom', '.zip', '.7z', '.iso', '.bin', '.cue', '.chd', '.sfc', '.smc', '.nes', '.gba', '.gbc', '.gb', '.nds', '.3ds', '.n64', '.z64', '.rvz', '.wbfs', '.xci', '.nsp', '.nsz', '.cso', '.pbp', '.gen', '.md', '.cdi', '.gdi', '.exe', '.appimage']
     };
     
-    // Determinar qué extensiones buscar basado en el icono del emulador
+    // Determinar qué extensiones buscar basado en el icono o nombre del emulador
     let iconBase = '';
     if (emulator.icon) {
-      // Usar path para manejar correctamente las rutas
-      iconBase = path.basename(emulator.icon, path.extname(emulator.icon));
+      iconBase = path.basename(emulator.icon, path.extname(emulator.icon)).toLowerCase().trim();
     }
-    const extensions = romExtensions[iconBase] || romExtensions.default;
-    // Leer directorio
-    const files = fs.readdirSync(emulator.gamesPath);
+    const emuName = emulator.name ? emulator.name.toLowerCase().trim() : '';
+    const validKeys = Object.keys(romExtensions).filter(k => k !== 'default' && k !== 'otra');
     
-    // Filtrar solo archivos con extensiones de ROM
-    const games = files
-      .filter(file => {
-        const ext = path.extname(file).toLowerCase();
-        return extensions.includes(ext);
-      })
-      .map(file => {
-        const gamePath = path.join(emulator.gamesPath, file);
-        const gameName = path.basename(file, path.extname(file)).replace(/[-_\.]/g, ' ');
-        
-        // Retornar el juego con estructura básica
-        return {
-          name: gameName,
-          path: gamePath,
-          coverUrl: null // Se asignará cuando se encuentre la carátula local
-        };
-      });
-    
-    // Si hay carpeta de carátulas, buscamos carátulas locales para cada juego
-    if (emulator.coversPath) {
-      for (const game of games) {
-        try {
-          const coverPath = await findLocalCover(game.name, emulator.coversPath);
-          if (coverPath) {
-            // Convertir imagen a base64 para evitar problemas de seguridad en Electron
-            try {
-              const imageBuffer = fs.readFileSync(coverPath);
-              const imageBase64 = imageBuffer.toString('base64');
-              const imageExt = path.extname(coverPath).toLowerCase().substring(1);
-              const mimeType = imageExt === 'jpg' ? 'jpeg' : imageExt;
-              game.coverUrl = `data:image/${mimeType};base64,${imageBase64}`;
-            } catch (error) {
-              console.error(`Error convirtiendo carátula a base64 para ${game.name}:`, error);
-              game.coverUrl = null;
-            }
+    // Primero coincidencia exacta para evitar colisiones (ej. 'nes' dentro de 'snes')
+    let matchingKey = validKeys.find(k => k === iconBase || k === emuName);
+    if (!matchingKey) {
+      // Ordenar por longitud descendente para que 'snes' coincida antes que 'nes', 'wiiu' antes que 'wii', etc.
+      const sortedKeys = [...validKeys].sort((a, b) => b.length - a.length);
+      matchingKey = sortedKeys.find(k => (iconBase && iconBase.includes(k)) || (emuName && emuName.includes(k)));
+    }
+    const extensions = romExtensions[matchingKey] || (iconBase ? romExtensions[iconBase] : null) || romExtensions.default;
+
+    // Escanear directorio de juegos de manera recursiva (hasta 3 niveles de profundidad)
+    function scanDirRecursive(dir, maxDepth = 3, currentDepth = 0) {
+      let results = [];
+      if (currentDepth > maxDepth || !fs.existsSync(dir)) return results;
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.name.startsWith('.')) continue; // ignorar archivos ocultos
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            results = results.concat(scanDirRecursive(fullPath, maxDepth, currentDepth + 1));
+          } else if (entry.isFile()) {
+            results.push({ name: entry.name, fullPath });
           }
-        } catch (error) {
-          console.error(`Error buscando carátula local para ${game.name}:`, error);
         }
+      } catch (err) {
+        console.error(`Error escaneando carpeta ${dir}:`, err);
+      }
+      return results;
+    }
+
+    const allFiles = scanDirRecursive(emulator.gamesPath, 3, 0);
+
+    // Evitar duplicados de pistas secundarias si existe un archivo .cue o .m3u
+    const cueFiles = allFiles.filter(f => f.name.toLowerCase().endsWith('.cue') || f.name.toLowerCase().endsWith('.m3u'));
+    const hasCue = cueFiles.length > 0;
+
+    const filteredFiles = allFiles.filter(fileObj => {
+      const ext = path.extname(fileObj.name).toLowerCase();
+      if (!extensions.includes(ext)) return false;
+
+      // Si existe un .cue, ignorar .bin que correspondan a pistas secundarias
+      if (hasCue && ext === '.bin') {
+        const isTrack = /(?:track\s*0*[2-9]|track\s*[1-9]\d)/i.test(fileObj.name);
+        if (isTrack) return false;
+      }
+      return true;
+    });
+
+    const games = filteredFiles.map(fileObj => {
+      const gamePath = fileObj.fullPath;
+      const gameName = path.basename(fileObj.name, path.extname(fileObj.name)).replace(/[-_\.]/g, ' ');
+      return {
+        name: gameName,
+        filename: fileObj.name,
+        path: gamePath,
+        coverUrl: null
+      };
+    });
+    
+    // Pre-indexar la carpeta de carátulas para búsqueda instantánea O(1) (evita readdir repetitivo)
+    const localCoversMap = new Map();
+    if (emulator.coversPath && fs.existsSync(emulator.coversPath)) {
+      try {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+        const files = fs.readdirSync(emulator.coversPath);
+        for (const file of files) {
+          const ext = path.extname(file).toLowerCase();
+          if (imageExtensions.includes(ext)) {
+            const base = path.basename(file, ext);
+            const norm = base.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '').trim();
+            const fullPath = path.join(emulator.coversPath, file);
+            localCoversMap.set(norm, fullPath);
+            localCoversMap.set(base.toLowerCase().trim(), fullPath);
+          }
+        }
+      } catch (err) {
+        console.error(`Error indexando carátulas de ${emulator.coversPath}:`, err);
+      }
+    }
+
+    // Buscar carátula en carpeta personalizada (si existe) o en el caché de Cascabel Covers
+    for (const game of games) {
+      try {
+        let coverPath = null;
+        if (localCoversMap.size > 0) {
+          const normGame = game.name.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '').trim();
+          coverPath = localCoversMap.get(normGame) || localCoversMap.get(game.name.toLowerCase().trim()) || null;
+        }
+        if (!coverPath) {
+          coverPath = coverScraper.getCachedCover(game.path, game.filename, emulator);
+        }
+        if (coverPath) {
+          try {
+            const imageBuffer = fs.readFileSync(coverPath);
+            const imageBase64 = imageBuffer.toString('base64');
+            const imageExt = path.extname(coverPath).toLowerCase().substring(1);
+            const mimeType = imageExt === 'jpg' ? 'jpeg' : imageExt;
+            game.coverUrl = `data:image/${mimeType};base64,${imageBase64}`;
+          } catch (error) {
+            console.error(`Error convirtiendo carátula a base64 para ${game.name}:`, error);
+            game.coverUrl = null;
+          }
+        }
+      } catch (error) {
+        console.error(`Error buscando carátula para ${game.name}:`, error);
       }
     }
     
@@ -519,85 +630,83 @@ async function findLocalCover(gameName, coversPath) {
   }
 }
 
-// Función para cargar/actualizar carátulas de juegos
-async function loadGameCovers(games, emulator) {
-  if (!games || !emulator || !emulator.coversPath) {
+// Función para scraping en segundo plano de carátulas con Cascabel Covers
+function startBackgroundCoverScraping(games, emulator) {
+  if (!games || games.length === 0 || !emulator) {
     return;
   }
-  
-  // Mostrar indicador de carga
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.className = 'loading-indicator';
-  loadingIndicator.innerHTML = `<div class="spinner"></div><p>${t('ui.messages.updatingCovers')}</p>`;
-  document.body.appendChild(loadingIndicator);
-  
-  // Contador para seguimiento de progreso
-  let processed = 0;
-  let successful = 0;
-  const total = games.length;
-  
-  try {
-    // Procesar cada juego
-    for (const game of games) {
-      try {
-        // Actualizar mensaje de progreso
-        loadingIndicator.querySelector('p').textContent = 
-          `${t('ui.messages.updatingProgress')} ${game.name} (${processed+1}/${total})`;
-          
-        // Buscar carátula local
-        const coverPath = await findLocalCover(game.name, emulator.coversPath);
-        
-        if (coverPath) {
-          // Convertir imagen a base64 para evitar problemas de seguridad en Electron
-          try {
-            const imageBuffer = fs.readFileSync(coverPath);
-            const imageBase64 = imageBuffer.toString('base64');
-            const imageExt = path.extname(coverPath).toLowerCase().substring(1);
-            const mimeType = imageExt === 'jpg' ? 'jpeg' : imageExt;
-            game.coverUrl = `data:image/${mimeType};base64,${imageBase64}`;
-            successful++;
-            
-            // Actualizar la interfaz si ya existe la tarjeta del juego
-            const gameCards = document.querySelectorAll('.game-card');
-            for (const card of gameCards) {
-              if (card.querySelector('.game-title').textContent === game.name) {
-                const cover = card.querySelector('.game-cover');
-                cover.innerHTML = '';
-                cover.style.backgroundImage = `url('${game.coverUrl}')`;
-                break;
-              }
-            }
-          } catch (error) {
-            console.error(`Error convirtiendo carátula a base64 para ${game.name}:`, error);
-          }
-        }
-        
-        processed++;
-      } catch (error) {
-        console.error(`Error actualizando carátula para ${game.name}:`, error);
-        processed++;
-      }
-    }
-    
-    // Actualizar mensaje final
-    loadingIndicator.querySelector('p').textContent = 
-      `${t('ui.messages.coversUpdatedFinal')} ${successful} de ${total}`;
-    
-    // Remover indicador después de un tiempo
-    setTimeout(() => {
-      if (document.body.contains(loadingIndicator)) {
-        loadingIndicator.remove();
-      }
-    }, 2000);
-    
-  } catch (error) {
-    console.error('General error updating covers:', error);
-    
-    // Asegurar que se remueva el indicador en caso de error
-    if (document.body.contains(loadingIndicator)) {
-      loadingIndicator.remove();
-    }
+
+  const missing = games.filter(g => !g.coverUrl && !g.coverRemoved);
+  if (missing.length === 0) {
+    return;
   }
+
+  let badge = document.getElementById('cover-scraping-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'cover-scraping-badge';
+    badge.className = 'cover-scraping-badge';
+    document.body.appendChild(badge);
+  }
+
+  badge.style.display = 'flex';
+  badge.style.opacity = '1';
+  badge.innerHTML = `
+    <div class="scraping-spinner"></div>
+    <span class="scraping-text">${t('ui.messages.updatingCovers')} (1/${missing.length})</span>
+  `;
+
+  coverScraper.scrapeCoversForGames(
+    games,
+    emulator,
+    (game, dataUrl, coverPath) => {
+      // Actualizar en el objeto de juego en memoria
+      game.coverUrl = dataUrl;
+
+      // Actualizar tarjeta en el DOM usando data-path
+      let card = document.querySelector(`.game-card[data-path="${CSS.escape(game.path)}"]`);
+      if (!card) {
+        for (const [_, grid] of emulatorDOMCache.entries()) {
+          card = grid.querySelector(`.game-card[data-path="${CSS.escape(game.path)}"]`);
+          if (card) break;
+        }
+      }
+      if (card) {
+        const coverEl = card.querySelector('.game-cover');
+        if (coverEl) {
+          coverEl.innerHTML = '';
+          coverEl.style.backgroundImage = `url('${dataUrl}')`;
+        }
+      }
+    },
+    (progress) => {
+      if (badge && badge.style.display !== 'none') {
+        const textSpan = badge.querySelector('.scraping-text');
+        if (textSpan) {
+          textSpan.textContent = `${t('ui.messages.updatingProgress')} ${progress.processed}/${progress.total}`;
+        }
+      }
+    },
+    (summary) => {
+      if (badge && badge.style.display !== 'none') {
+        badge.innerHTML = `
+          <span class="material-symbols-outlined" style="font-size: 18px; color: #4caf50;">check_circle</span>
+          <span class="scraping-text">${t('ui.messages.coversUpdatedFinal')} ${summary.found} de ${summary.total}</span>
+        `;
+        setTimeout(() => {
+          if (badge) {
+            badge.style.opacity = '0';
+            setTimeout(() => {
+              if (badge) {
+                badge.style.display = 'none';
+                badge.style.opacity = '1';
+              }
+            }, 500);
+          }
+        }, 2500);
+      }
+    }
+  );
 }
 
 // Lanzar un juego con el emulador correspondiente
@@ -607,13 +716,20 @@ async function launchGame(emulatorPath, gamePath) {
     const gameName = path.basename(gamePath, path.extname(gamePath)).replace(/[-_\.]/g, ' ');
     const currentEmulatorIndex = getCurrentEmulatorIndex();
     
-    // Actualizar estadísticas ANTES de lanzar
-    updateGameStats(currentEmulatorIndex, gameName);
+    const result = await ipcRenderer.invoke('launch-game', emulatorPath, gamePath);
     
-    await ipcRenderer.invoke('launch-game', emulatorPath, gamePath);
+    if (result && result.success === false) {
+      const baseMsg = t('ui.messages.errorLaunching') || 'Error al lanzar el juego:';
+      alert(`${baseMsg}\n\n${result.error}`);
+      return;
+    }
+
+    // Actualizar estadísticas tras confirmar lanzamiento
+    updateGameStats(currentEmulatorIndex, gameName);
   } catch (error) {
     console.error('Error al lanzar el juego:', error);
-    alert(`${t('ui.messages.errorLaunching')} ${error.message}`);
+    const baseMsg = t('ui.messages.errorLaunching') || 'Error al lanzar el juego:';
+    alert(`${baseMsg} ${error.message}`);
   }
 }
 
@@ -751,6 +867,86 @@ function getControllerSvg(iconType) {
   </svg>`;
 }
 
+// Índice de consola/pestaña actualmente seleccionada
+let currentTabIndex = 0;
+
+// Obtiene el identificador de la consola asociado a un emulador
+function getConsoleTypeFromEmulator(emu) {
+  if (!emu) return 'otra';
+  let iconName = '';
+  if (emu.icon) {
+    iconName = path.basename(emu.icon, path.extname(emu.icon)).toLowerCase().trim();
+  }
+  const nameLower = emu.name ? emu.name.toLowerCase().trim() : '';
+  const knownConsoles = [
+    'nes', 'snes', 'n64', 'gamecube', 'wii', 'wiiu', 'switch',
+    'gameboy', 'gbc', 'gba', 'ds', '3ds',
+    'ps1', 'ps2', 'psp', 'genesis', 'dreamcast',
+    'xbox360', 'xbox', 'mame'
+  ];
+
+  // Coincidencia exacta primero
+  const exact = knownConsoles.find(c => c === iconName || c === nameLower);
+  if (exact) return exact;
+
+  // Si no es exacta, buscar subcadenas ordenando por longitud descendente para evitar falsos positivos ('snes' antes de 'nes', 'wiiu' antes de 'wii', etc.)
+  const sortedConsoles = [...knownConsoles].sort((a, b) => b.length - a.length);
+  for (const c of sortedConsoles) {
+    if (iconName && iconName.includes(c)) return c;
+  }
+  for (const c of sortedConsoles) {
+    if (nameLower && nameLower.includes(c)) return c;
+  }
+  return 'otra';
+}
+
+// Genera la carátula predeterminada con la estética de caja física de la consola y la consola al centro
+function createDefaultConsoleCoverHTML(game, emu) {
+  const consoleKey = getConsoleTypeFromEmulator(emu);
+  
+  const consoleLabels = {
+    'nes': { brand: 'Nintendo', sub: 'Entertainment System' },
+    'snes': { brand: 'Super Nintendo', sub: 'Entertainment System' },
+    'n64': { brand: 'Nintendo 64', sub: 'Official Seal of Quality' },
+    'gamecube': { brand: 'Nintendo', sub: 'GameCube' },
+    'wii': { brand: 'Wii', sub: 'Nintendo' },
+    'wiiu': { brand: 'Wii U', sub: 'Nintendo' },
+    'switch': { brand: 'Nintendo Switch', sub: '' },
+    'gameboy': { brand: 'Nintendo', sub: 'Game Boy' },
+    'gbc': { brand: 'Game Boy', sub: 'Color' },
+    'gba': { brand: 'Game Boy Advance', sub: 'Nintendo' },
+    'ds': { brand: 'Nintendo DS', sub: '' },
+    '3ds': { brand: 'Nintendo 3DS', sub: '' },
+    'ps1': { brand: 'PlayStation', sub: 'Sony' },
+    'ps2': { brand: 'PlayStation 2', sub: 'Sony' },
+    'psp': { brand: 'PSP', sub: 'PlayStation Portable' },
+    'genesis': { brand: 'SEGA', sub: 'Genesis' },
+    'dreamcast': { brand: 'SEGA', sub: 'Dreamcast' },
+    'xbox': { brand: 'XBOX', sub: 'Microsoft' },
+    'xbox360': { brand: 'XBOX 360', sub: 'Microsoft' },
+    'mame': { brand: 'Arcade Classics', sub: 'MAME' },
+    'otra': { brand: 'Cascabel', sub: 'Collection' }
+  };
+
+  const labels = consoleLabels[consoleKey] || consoleLabels.otra;
+  const iconPath = `../assets/console-icons/${consoleKey}.png`;
+
+  return `
+    <div class="default-console-box box-${consoleKey}">
+      <div class="box-badge-top">
+        <span class="box-brand-title">${labels.brand}</span>
+        ${labels.sub ? `<span class="box-sub-title">${labels.sub}</span>` : ''}
+      </div>
+      <div class="box-center">
+        <img class="box-console-img" src="${iconPath}" alt="${consoleKey}" />
+      </div>
+      <div class="box-badge-bottom">
+        <span class="box-game-name">${game.name}</span>
+      </div>
+    </div>
+  `;
+}
+
 // Renderizar las pestañas de emuladores
 function renderTabs() {
   const nav = document.getElementById('emulator-tabs');
@@ -758,50 +954,35 @@ function renderTabs() {
   
   nav.innerHTML = '';
   
-  // Siempre crear la navbar, incluso sin emuladores
-  
-  // Creamos el contenedor principal del header
+  // Contenedor principal del header
   const headerContainer = document.createElement('div');
   headerContainer.className = 'header-container';
   
-  // Crear botón de menú hamburguesa fijo (a la izquierda)
+  // Botón de menú hamburguesa fijo (a la izquierda)
   const menuButton = document.createElement('button');
   menuButton.className = 'profile-button-navbar';
   menuButton.id = 'hamburger-menu-btn';
   menuButton.title = t('ui.messages.menu');
   
-  // Crear imagen de perfil circular usando elemento img
   const profileImage = document.createElement('img');
   profileImage.className = 'profile-image-navbar';
   
-  // Verificar si hay imagen de perfil configurada
   if (config.theme && config.theme.profileImage) {
     profileImage.src = config.theme.profileImage;
   } else {
-    // Usar imagen por defecto de cascabel.png
     profileImage.src = '../assets/cascabel.png';
   }
   
   menuButton.appendChild(profileImage);
   menuButton.addEventListener('click', function(e) {
-    e.stopPropagation(); // Evita que el evento se propague
+    e.stopPropagation();
     showMainMenu(e);
   });
-  
-  // Crear contenedor de pestañas con scroll
-  const tabsContainer = document.createElement('div');
-  tabsContainer.className = 'tabs-container';
-  
-  // Añadir el botón de menú y el contenedor de pestañas al header
+
   headerContainer.appendChild(menuButton);
-  headerContainer.appendChild(tabsContainer);
   
-  // Añadimos el contenedor del header al nav
-  nav.appendChild(headerContainer);
-  
-  // Verificar si hay emuladores para agregar pestañas
+  // Verificar si hay emuladores configurados
   if (!config.emulators || config.emulators.length === 0) {
-    // Remover mensaje vacío existente si existe
     const existingEmptyMessage = document.querySelector('.empty-message');
     if (existingEmptyMessage) {
       existingEmptyMessage.remove();
@@ -825,80 +1006,102 @@ function renderTabs() {
     emptyMessage.appendChild(messageText);
     emptyMessage.appendChild(addButton);
     
-    // Agregar al body para que ocupe toda la ventana
     document.body.appendChild(emptyMessage);
     
-    // Limpiar el contenido principal
     const main = document.getElementById('emulator-content');
     if (main) {
       main.innerHTML = '';
     }
+    nav.appendChild(headerContainer);
     return;
   }
   
-  // Remover mensaje vacío si existe
   const existingEmptyMessage = document.querySelector('.empty-message');
   if (existingEmptyMessage) {
     existingEmptyMessage.remove();
   }
 
-  // Añadimos las pestañas al contenedor
+  // Estilos de pestañas y alineación configurados
+  const tabStyle = (config.theme && config.theme.tabStyle) || 'both';
+  const tabAlignment = (config.theme && config.theme.tabAlignment) || 'left';
+
+  const tabsContainer = document.createElement('div');
+  tabsContainer.className = `tabs-container align-${tabAlignment}`;
+
   config.emulators.forEach((emu, idx) => {
     const tab = document.createElement('button');
-    tab.className = 'tab' + (idx === 0 ? ' selected' : '');
-    tab.draggable = true; // Hacer la pestaña arrastrable
-    
-    // Mostramos solo el nombre, ya no hay iconos en las pestañas
-    tab.innerHTML = `<span>${emu.name}</span>`;
-    
+    tab.className = 'tab' + (idx === currentTabIndex ? ' selected' : '');
+    tab.draggable = true;
+
+    const iconKey = (emu.icon || 'otra').toLowerCase();
+    const iconSrc = `../assets/console-icons/${iconKey}.png`;
+
+    if (tabStyle === 'text') {
+      tab.innerHTML = `<span>${emu.name}</span>`;
+    } else if (tabStyle === 'icons') {
+      tab.classList.add('tab-icon-only');
+      tab.title = emu.name;
+      tab.innerHTML = `<img class="tab-console-icon" src="${iconSrc}" alt="${emu.name}" onerror="this.src='../assets/console-icons/otra.png'" />`;
+    } else {
+      // 'both' (iconos y texto)
+      tab.innerHTML = `<img class="tab-console-icon" src="${iconSrc}" alt="${emu.name}" onerror="this.src='../assets/console-icons/otra.png'" /> <span>${emu.name}</span>`;
+    }
+
     // Click izquierdo para seleccionar pestaña
     tab.addEventListener('click', function(e) {
-      // Solo seleccionar si no se está arrastrando
       if (!tab.classList.contains('dragging')) {
-        // Calcular el índice actual dinámicamente (ya no hay -1 porque el menú está separado)
         const currentIndex = Array.from(tabsContainer.children).indexOf(tab);
         selectTab(currentIndex);
       }
     });
-    
+
     // Click derecho para menú contextual
     tab.addEventListener('contextmenu', function(e) {
       e.preventDefault();
-      // Calcular el índice actual dinámicamente (ya no hay -1 porque el menú está separado)
       const currentIndex = Array.from(tabsContainer.children).indexOf(tab);
       showTabContextMenu(e, currentIndex);
     });
-    
-    // Event listeners para drag and drop
+
+    // Drag and drop listeners
     tab.addEventListener('dragstart', handleDragStart);
     tab.addEventListener('dragend', handleDragEnd);
     tab.addEventListener('dragover', handleDragOver);
     tab.addEventListener('drop', handleDrop);
     tab.addEventListener('dragenter', handleDragEnter);
     tab.addEventListener('dragleave', handleDragLeave);
-    
+
     tabsContainer.appendChild(tab);
   });
-  
-  // Agregar scroll horizontal a las pestañas
+
   tabsContainer.addEventListener('wheel', function(e) {
     if (e.deltaY !== 0) {
       e.preventDefault();
       tabsContainer.scrollLeft += e.deltaY;
     }
   });
-  
-  // Seleccionar la primera pestaña por defecto
-  selectTab(0);
-  
-  // Aplicar colores a las pestañas después de renderizar
+
+  headerContainer.appendChild(tabsContainer);
+  nav.appendChild(headerContainer);
+
+  // Asegurar que el índice seleccionado sea válido
+  if (currentTabIndex >= config.emulators.length) {
+    currentTabIndex = 0;
+  }
+
+  // Seleccionar la pestaña
+  selectTab(currentTabIndex);
+
+  // Aplicar colores
   setTimeout(() => applyTabColors(), 100);
 }
 
-// Seleccionar una pestaña
+// Seleccionar una pestaña o consola
 function selectTab(idx) {
   if (!config.emulators || !config.emulators[idx]) return;
   
+  const emu = config.emulators[idx];
+  currentTabIndex = idx;
+
   // Verificar que el idioma esté completamente cargado
   if (!currentLanguage || !currentLanguage.ui || !currentLanguage.ui.messages) {
     console.warn('Language not loaded in selectTab, waiting...');
@@ -906,17 +1109,45 @@ function selectTab(idx) {
     return;
   }
   
+  // Actualizar estado de pestañas clásicas si existen
   document.querySelectorAll('.tab').forEach((t, i) => {
     t.classList.toggle('selected', i === idx);
   });
   
-  // Aplicar colores a las pestañas después de cambiar la selección
+  // Aplicar colores a las pestañas y componentes
   applyTabColors();
-  
-  const emu = config.emulators[idx];
+
+  // Cancelar escaneo anterior si cambiamos de pestaña
+  coverScraper.cancelActiveScan();
+  const existingBadge = document.getElementById('cover-scraping-badge');
+  if (existingBadge) {
+    existingBadge.style.display = 'none';
+  }
   const main = document.getElementById('emulator-content');
   if (!main) return;
   
+  // Si ya tenemos el DOM renderizado en caché para esta pestaña, mostrarlo al instante (0ms)
+  if (emulatorDOMCache.has(idx)) {
+    main.innerHTML = '';
+    main.appendChild(emulatorDOMCache.get(idx));
+    return;
+  }
+
+  // Si ya tenemos los juegos en memoria para este emulador, renderizar una sola vez y cachear DOM
+  if (emulatorGamesCache.has(idx)) {
+    const cachedGames = emulatorGamesCache.get(idx);
+    if (cachedGames.length === 0) {
+      showEmptyGamesMessage(idx, main);
+      return;
+    }
+    const gamesToShow = renderGamesToContainer(cachedGames, emu, main, false, idx);
+    if (!emulatorScrapedSet.has(idx)) {
+      emulatorScrapedSet.add(idx);
+      startBackgroundCoverScraping(gamesToShow, emu);
+    }
+    return;
+  }
+
   main.innerHTML = `
     <div class="loading">
       <div class="loading-spinner"></div>
@@ -924,105 +1155,23 @@ function selectTab(idx) {
     </div>
   `;
   
-  // Cargar los juegos desde la carpeta
+  // Cargar los juegos desde la carpeta (solo la primera vez o si se fuerza reescaneo)
   loadGames(emu).then(games => {
+    emulatorGamesCache.set(idx, games);
+
     if (games.length === 0) {
-      // Verificar que el idioma esté cargado completamente
-      if (!currentLanguage || !currentLanguage.ui || !currentLanguage.ui.messages) {
-        console.warn('Language not fully loaded, retrying in 200ms...');
-        setTimeout(() => selectTab(idx), 200);
-        return;
-      }
-      
-      main.innerHTML = `
-        <div class="empty-message">
-          <div class="empty-icon">🎮</div>
-          <h3>${t('ui.messages.noGamesFoundTitle')}</h3>
-          <p>${t('ui.messages.noGamesCompatible')}</p>
-          <button id="select-games-path-btn" class="btn btn-primary">${t('ui.messages.selectOtherFolderButton')}</button>
-        </div>
-      `;
-      
-      // Listener para cambiar la carpeta de juegos
-      document.getElementById('select-games-path-btn').addEventListener('click', () => {
-        editEmulator(idx);
-      });
-      
+      showEmptyGamesMessage(idx, main);
       return;
     }
     
-    // Aplicar ordenamiento guardado ANTES de mostrar los juegos
-    let gamesToShow = [...games];
-    if (emu.sortType && emu.sortType !== 'none') {
-      const gameStats = emu.gameStats || {};
-      
-      switch (emu.sortType) {
-        case 'alphabetical':
-          gamesToShow.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
-          break;
-        case 'mostplayed':
-          gamesToShow.sort((a, b) => {
-            const aStats = gameStats[a.name] || { playCount: 0 };
-            const bStats = gameStats[b.name] || { playCount: 0 };
-            
-            // Ordenar por playCount descendente (más jugados primero)
-            if (bStats.playCount !== aStats.playCount) {
-              return bStats.playCount - aStats.playCount;
-            }
-            
-            // Si tienen mismo playCount, ordenar por última vez jugado
-            const aLastPlayed = aStats.lastPlayed ? new Date(aStats.lastPlayed) : new Date(0);
-            const bLastPlayed = bStats.lastPlayed ? new Date(bStats.lastPlayed) : new Date(0);
-            
-            return bLastPlayed - aLastPlayed;
-          });
-          break;
-      }
+    // Renderizar la cuadrícula de juegos (se almacena automáticamente en emulatorDOMCache)
+    const gamesToShow = renderGamesToContainer(games, emu, main, false, idx);
+
+    // Iniciar escaneo automático en segundo plano con Cascabel Covers (solo 1 vez por sesión)
+    if (!emulatorScrapedSet.has(idx)) {
+      emulatorScrapedSet.add(idx);
+      startBackgroundCoverScraping(gamesToShow, emu);
     }
-    
-    const gamesGrid = document.createElement('div');
-    gamesGrid.className = 'games-grid';
-    
-    gamesToShow.forEach(game => {
-      const gameCard = document.createElement('div');
-      gameCard.className = 'game-card';
-      
-      // Adaptar proporciones de carátula según consola
-      if (emu && emu.icon) {
-        const iconName = String(emu.icon).toLowerCase();
-        const horizontalConsoles = ['snes', 'n64', 'genesis', 'md', 'smd', 'psp', 'gba'];
-        const isHorizontal = horizontalConsoles.some(c => iconName.includes(c));
-        gameCard.classList.add(isHorizontal ? 'cover-horizontal' : 'cover-vertical');
-      } else {
-        gameCard.classList.add('cover-vertical');
-      }
-      
-      gameCard.setAttribute('data-title', game.name); // Agregar título como atributo para tooltip
-      
-      const gameCover = document.createElement('div');
-      gameCover.className = 'game-cover';
-      
-      // Si tiene imagen de carátula, mostrarla
-      if (game.coverUrl) {
-        gameCover.style.backgroundImage = `url('${game.coverUrl}')`;
-      } else {
-        gameCover.innerHTML = `<div class="no-cover">${t('ui.messages.noCover')}</div>`;
-      }
-      
-      // Solo agregar la carátula, sin el título
-      gameCard.appendChild(gameCover);
-      
-      // Al hacer clic en un juego, lanzarlo con el emulador
-      gameCard.addEventListener('click', (event) => {
-        event.preventDefault();
-        handleGameClick(emu.execPath, game.path, gameCard);
-      });
-      
-      gamesGrid.appendChild(gameCard);
-    });
-    
-    main.innerHTML = '';
-    main.appendChild(gamesGrid);
   }).catch(error => {
     main.innerHTML = `
       <div class="error-message">
@@ -1034,9 +1183,229 @@ function selectTab(idx) {
     
     // Listener para reintentar
     document.getElementById('retry-load-btn').addEventListener('click', () => {
+      emulatorGamesCache.delete(idx);
+      emulatorDOMCache.delete(idx);
+      emulatorScrapedSet.delete(idx);
       selectTab(idx);
     });
   });
+}
+
+// Muestra el mensaje de consola vacía
+function showEmptyGamesMessage(idx, main) {
+  if (!currentLanguage || !currentLanguage.ui || !currentLanguage.ui.messages) {
+    console.warn('Language not fully loaded, retrying in 200ms...');
+    setTimeout(() => selectTab(idx), 200);
+    return;
+  }
+  
+  main.innerHTML = `
+    <div class="empty-message">
+      <div class="empty-icon">🎮</div>
+      <h3>${t('ui.messages.noGamesFoundTitle')}</h3>
+      <p>${t('ui.messages.noGamesCompatible')}</p>
+      <button id="select-games-path-btn" class="btn btn-primary">${t('ui.messages.selectOtherFolderButton')}</button>
+    </div>
+  `;
+  
+  const btn = document.getElementById('select-games-path-btn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      editEmulator(idx);
+    });
+  }
+}
+
+// Renderiza la cuadrícula de juegos en el contenedor especificado
+function renderGamesToContainer(games, emu, container, animate = false, tabIdx = null) {
+  let gamesToShow = [...games];
+  if (emu.sortType && emu.sortType !== 'none') {
+    const gameStats = emu.gameStats || {};
+    switch (emu.sortType) {
+      case 'alphabetical':
+        gamesToShow.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+        break;
+      case 'mostplayed':
+        gamesToShow.sort((a, b) => {
+          const aStats = gameStats[a.name] || { playCount: 0 };
+          const bStats = gameStats[b.name] || { playCount: 0 };
+          if (bStats.playCount !== aStats.playCount) {
+            return bStats.playCount - aStats.playCount;
+          }
+          const aLastPlayed = aStats.lastPlayed ? new Date(aStats.lastPlayed) : new Date(0);
+          const bLastPlayed = bStats.lastPlayed ? new Date(bStats.lastPlayed) : new Date(0);
+          return bLastPlayed - aLastPlayed;
+        });
+        break;
+    }
+  }
+
+  const gamesGrid = document.createElement('div');
+  gamesGrid.className = 'games-grid' + (animate ? ' fade-refresh' : '');
+
+  gamesToShow.forEach(game => {
+    const gameCard = document.createElement('div');
+    gameCard.className = 'game-card';
+
+    // Adaptar proporciones de carátula según consola
+    if (emu && emu.icon) {
+      const iconName = String(emu.icon).toLowerCase();
+      const horizontalConsoles = ['snes', 'n64', 'genesis', 'md', 'smd', 'psp', 'gba'];
+      const isHorizontal = horizontalConsoles.some(c => iconName.includes(c));
+      gameCard.classList.add(isHorizontal ? 'cover-horizontal' : 'cover-vertical');
+    } else {
+      gameCard.classList.add('cover-vertical');
+    }
+
+    gameCard.setAttribute('data-path', game.path);
+    gameCard.setAttribute('data-title', game.name); // Agregar título como atributo para tooltip
+
+    const gameCover = document.createElement('div');
+    gameCover.className = 'game-cover';
+
+    // Si tiene imagen de carátula, mostrarla; de lo contrario mostrar la caja física de la consola
+    if (game.coverUrl) {
+      gameCover.style.backgroundImage = `url('${game.coverUrl}')`;
+      gameCover.innerHTML = '';
+    } else {
+      gameCover.style.backgroundImage = 'none';
+      gameCover.innerHTML = createDefaultConsoleCoverHTML(game, emu);
+    }
+
+    // Solo agregar la carátula, sin el título
+    gameCard.appendChild(gameCover);
+
+    // Al hacer clic en un juego, lanzarlo con el emulador
+    gameCard.addEventListener('click', (event) => {
+      event.preventDefault();
+      handleGameClick(emu.execPath, game.path, gameCard);
+    });
+
+    // Al hacer clic derecho en la portada, mostrar menú contextual (Eliminar foto)
+    gameCard.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      showGameContextMenu(event, game, emu, gameCard);
+    });
+
+    gamesGrid.appendChild(gameCard);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(gamesGrid);
+  const targetIndex = tabIdx !== null ? tabIdx : currentTabIndex;
+  if (targetIndex !== null && targetIndex >= 0) {
+    emulatorDOMCache.set(targetIndex, gamesGrid);
+  }
+  return gamesToShow;
+}
+
+// Menú contextual para un juego individual (clic derecho en portada)
+function showGameContextMenu(event, game, emu, gameCard) {
+  closeContextMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  menu.style.left = `${event.clientX}px`;
+  menu.style.top = `${event.clientY}px`;
+
+  const deleteOption = document.createElement('div');
+  deleteOption.className = 'context-menu-item';
+  deleteOption.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px; vertical-align: middle;">delete</span>${t('ui.contextMenu.removeCover') || 'Eliminar foto'}`;
+
+  deleteOption.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeContextMenu();
+    removeGameCover(game, emu, gameCard);
+  });
+
+  menu.appendChild(deleteOption);
+  document.body.appendChild(menu);
+
+  // Ajustar posición si se sale de la pantalla
+  const rect = menu.getBoundingClientRect();
+  if (rect.right > window.innerWidth) {
+    menu.style.left = `${window.innerWidth - rect.width - 10}px`;
+  }
+  if (rect.bottom > window.innerHeight) {
+    menu.style.top = `${window.innerHeight - rect.height - 10}px`;
+  }
+
+  // Cerrar al hacer clic fuera
+  setTimeout(() => {
+    window.addEventListener('click', closeContextMenu, { once: true });
+  }, 0);
+}
+
+// Elimina la carátula de un juego y vuelve a la carátula predeterminada de la consola
+function removeGameCover(game, emu, gameCard) {
+  try {
+    coverScraper.removeCover(game.path, emu, game.name);
+    game.coverUrl = null;
+    game.coverRemoved = true;
+
+    const gameCover = gameCard.querySelector('.game-cover');
+    if (gameCover) {
+      gameCover.style.transition = 'opacity 0.25s ease';
+      gameCover.style.opacity = '0';
+      setTimeout(() => {
+        gameCover.style.backgroundImage = 'none';
+        gameCover.innerHTML = createDefaultConsoleCoverHTML(game, emu);
+        gameCover.style.opacity = '1';
+      }, 250);
+    }
+  } catch (err) {
+    console.error('Error eliminando portada del juego:', err);
+  }
+}
+
+// Refresca los juegos de la consola sin recargar la pestaña ni mover la vista, con animación de opacidad
+async function refreshEmulatorGames(tabIndex) {
+  if (!config.emulators || !config.emulators[tabIndex]) return;
+  const emu = config.emulators[tabIndex];
+
+  // Si la pestaña no está seleccionada, seleccionarla normalmente
+  if (currentTabIndex !== tabIndex) {
+    emulatorGamesCache.delete(tabIndex);
+    selectTab(tabIndex);
+    return;
+  }
+
+  const main = document.getElementById('emulator-content');
+  if (!main) return;
+
+  const currentScroll = main.scrollTop;
+
+  // Cancelar escaneos activos
+  coverScraper.cancelActiveScan();
+  const existingBadge = document.getElementById('cover-scraping-badge');
+  if (existingBadge) {
+    existingBadge.style.display = 'none';
+  }
+
+  try {
+    // Forzar lectura fresca de disco y actualizar el caché
+    emulatorGamesCache.delete(tabIndex);
+    emulatorDOMCache.delete(tabIndex);
+    emulatorScrapedSet.delete(tabIndex);
+    const games = await loadGames(emu);
+    emulatorGamesCache.set(tabIndex, games);
+
+    if (games.length === 0) {
+      showEmptyGamesMessage(tabIndex, main);
+      return;
+    }
+
+    // Renderizar con animación de opacidad conservando la posición de scroll
+    const gamesToShow = renderGamesToContainer(games, emu, main, true, tabIndex);
+    main.scrollTop = currentScroll;
+
+    // Escanear carátulas faltantes (nuevos juegos o nombres actualizados)
+    emulatorScrapedSet.add(tabIndex);
+    startBackgroundCoverScraping(gamesToShow, emu);
+  } catch (error) {
+    console.error('Error refrescando juegos:', error);
+  }
 }
 
 // Mostrar menú principal (hamburguesa)
@@ -1197,7 +1566,16 @@ function showTabContextMenu(event, tabIndex) {
     showSearchBar();
   });
 
-  // Opción Editar (tercera opción)
+  // Opción Reescanear juegos y carátulas
+  const scanOption = document.createElement('div');
+  scanOption.className = 'context-menu-item';
+  scanOption.innerHTML = t('ui.contextMenu.scanCovers') || 'Reescanear juegos y carátulas';
+  scanOption.addEventListener('click', () => {
+    closeContextMenu();
+    refreshEmulatorGames(tabIndex);
+  });
+
+  // Opción Editar
   const editOption = document.createElement('div');
   editOption.className = 'context-menu-item';
   editOption.innerHTML = t('ui.contextMenu.edit');
@@ -1206,10 +1584,12 @@ function showTabContextMenu(event, tabIndex) {
     editEmulator(tabIndex);
   });
 
-  // Agregar opciones en el orden correcto: Ordenar, Buscar, Editar
+  // Agregar opciones en el orden correcto: Ordenar, Buscar, Escanear, Editar
   menu.appendChild(sortOption);
   menu.appendChild(searchOption);
-  menu.appendChild(editOption);  document.body.appendChild(menu);
+  menu.appendChild(scanOption);
+  menu.appendChild(editOption);
+  document.body.appendChild(menu);
   
   // Agregar el submenú directamente al body para mejor posicionamiento
   document.body.appendChild(submenu);
@@ -1341,95 +1721,24 @@ function sortGames(tabIndex, sortType, saveToConfig = true) {
     emulator.sortType = sortType;
     saveConfig();
   }
+
+  const main = document.getElementById('emulator-content');
+  if (!main) return;
+
+  // Si ya tenemos los juegos en memoria, ordenar y renderizar inmediatamente
+  if (emulatorGamesCache.has(tabIndex)) {
+    const cachedGames = emulatorGamesCache.get(tabIndex);
+    renderGamesToContainer(cachedGames, emulator, main, false, tabIndex);
+    return;
+  }
   
-  // Cargar los juegos actuales
+  // Si no estuviesen en memoria, cargar y almacenar
   loadGames(emulator).then(games => {
-    if (games.length === 0) return;
-    
-    let sortedGames = [...games];
-    
-    switch (sortType) {
-      case 'alphabetical':
-        sortedGames.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
-        break;
-      case 'mostplayed':
-        // Ordenamiento real por número de clics
-        const gameStats = emulator.gameStats || {};
-        
-        sortedGames.sort((a, b) => {
-          const aStats = gameStats[a.name] || { playCount: 0 };
-          const bStats = gameStats[b.name] || { playCount: 0 };
-          
-          // Ordenar por playCount descendente (más jugados primero)
-          if (bStats.playCount !== aStats.playCount) {
-            return bStats.playCount - aStats.playCount;
-          }
-          
-          // Si tienen mismo playCount, ordenar por última vez jugado
-          const aLastPlayed = aStats.lastPlayed ? new Date(aStats.lastPlayed) : new Date(0);
-          const bLastPlayed = bStats.lastPlayed ? new Date(bStats.lastPlayed) : new Date(0);
-          
-          return bLastPlayed - aLastPlayed;
-        });
-        break;
-      default:
-        return;
-    }
-    
-    // Re-renderizar la grilla con los juegos ordenados
-    renderSortedGames(sortedGames, emulator);
+    emulatorGamesCache.set(tabIndex, games);
+    renderGamesToContainer(games, emulator, main, false, tabIndex);
   }).catch(error => {
     console.error('Error ordenando juegos:', error);
   });
-}
-
-// Función para renderizar juegos ordenados
-function renderSortedGames(games, emulator) {
-  const main = document.getElementById('emulator-content');
-  if (!main) return;
-  
-  const gamesGrid = document.createElement('div');
-  gamesGrid.className = 'games-grid';
-  
-  games.forEach(game => {
-    const gameCard = document.createElement('div');
-    gameCard.className = 'game-card';
-    
-    // Adaptar proporciones de carátula según consola
-    if (emulator && emulator.icon) {
-      const iconName = String(emulator.icon).toLowerCase();
-      const horizontalConsoles = ['snes', 'n64', 'genesis', 'md', 'smd', 'psp', 'gba'];
-      const isHorizontal = horizontalConsoles.some(c => iconName.includes(c));
-      gameCard.classList.add(isHorizontal ? 'cover-horizontal' : 'cover-vertical');
-    } else {
-      gameCard.classList.add('cover-vertical');
-    }
-    
-    gameCard.setAttribute('data-title', game.name);
-    
-    const gameCover = document.createElement('div');
-    gameCover.className = 'game-cover';
-    
-    // Si tiene imagen de carátula, mostrarla
-    if (game.coverUrl) {
-      gameCover.style.backgroundImage = `url('${game.coverUrl}')`;
-    } else {
-      gameCover.innerHTML = `<div class="no-cover">${t('ui.messages.noCover')}</div>`;
-    }
-    
-    gameCard.appendChild(gameCover);
-    
-    // Al hacer clic en un juego, lanzarlo con el emulador
-    gameCard.addEventListener('click', (event) => {
-      event.preventDefault();
-      handleGameClick(emulator.execPath, game.path, gameCard);
-    });
-    
-    gamesGrid.appendChild(gameCard);
-  });
-  
-  main.innerHTML = '';
-  main.appendChild(gamesGrid);
 }
 
 // Editar un emulador existente
@@ -1471,6 +1780,9 @@ async function deleteEmulator(index) {
       
       // Eliminar el emulador
       config.emulators.splice(index, 1);
+      emulatorGamesCache.clear();
+      emulatorDOMCache.clear();
+      emulatorScrapedSet.clear();
       await ipcRenderer.invoke('save-config', config);
       renderTabs();
       resolve(true);
@@ -1501,13 +1813,19 @@ function showSettings(emulatorToEdit = null, editIndex = -1) {
     </div>
     <div class="form-group">
       <label for="emu-icon">${t('ui.forms.consoleType')}</label>
-      <select id="emu-icon"></select>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <select id="emu-icon" style="flex: 1;"></select>
+        <div style="width: 54px; height: 38px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); padding: 2px;">
+          <img id="emu-icon-preview" src="" alt="Icon" style="max-height: 100%; max-width: 100%; object-fit: contain; display: none;" />
+        </div>
+      </div>
     </div>
     <div class="form-group">
       <label for="emu-exec">${t('ui.forms.executablePath')}</label>
       <div class="file-input-group">
-        <input id="emu-exec" type="text" value="${isEditing ? emulatorToEdit.execPath : ''}">
-        <button id="select-exec-btn" class="btn">${t('ui.buttons.select')}</button>
+        <input id="emu-exec" type="text" value="${isEditing ? emulatorToEdit.execPath : ''}" placeholder="${t('ui.forms.execPlaceholder') || 'Ruta a archivo o comando del sistema'}">
+        <button id="select-exec-btn" class="btn" type="button" title="${t('ui.forms.file')}">${t('ui.forms.file')}</button>
+        <button id="select-sysapp-btn" class="btn btn-secondary" type="button" title="${t('ui.forms.systemApp')}">${t('ui.forms.systemApp')}</button>
       </div>
     </div>
     <div class="form-group">
@@ -1550,11 +1868,21 @@ function showSettings(emulatorToEdit = null, editIndex = -1) {
   document.getElementById('select-exec-btn').addEventListener('click', async function() {
     try {
       const result = await ipcRenderer.invoke('select-file');
-      document.getElementById('emu-exec').value = result;
+      if (result) {
+        document.getElementById('emu-exec').value = result;
+      }
     } catch (error) {
       console.error('Error seleccionando archivo:', error);
     }
   });
+
+  // Listener para elegir aplicación del sistema (Linux)
+  const selectSysAppBtn = document.getElementById('select-sysapp-btn');
+  if (selectSysAppBtn) {
+    selectSysAppBtn.addEventListener('click', function() {
+      openSystemAppsModal();
+    });
+  }
   
   // Listener para seleccionar carpeta de juegos
   document.getElementById('select-games-btn').addEventListener('click', async function() {
@@ -1597,6 +1925,156 @@ function showSettings(emulatorToEdit = null, editIndex = -1) {
   }
 }
 
+// Modal selector de aplicaciones instaladas en el sistema (Linux)
+async function openSystemAppsModal() {
+  const existing = document.getElementById('sysapps-modal');
+  if (existing) existing.remove();
+
+  const modalBackdrop = document.createElement('div');
+  modalBackdrop.id = 'sysapps-modal';
+  modalBackdrop.className = 'sysapps-modal-backdrop';
+
+  modalBackdrop.innerHTML = `
+    <div class="sysapps-modal-container">
+      <div class="sysapps-header">
+        <h3><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 8px;">apps</span>${t('ui.forms.selectSystemAppTitle') || 'Aplicaciones del sistema'}</h3>
+        <button id="close-sysapps-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="sysapps-search-bar">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input id="sysapps-search-input" type="text" placeholder="${t('ui.forms.searchAppsPlaceholder') || 'Buscar aplicación o emulador...'}" autofocus>
+      </div>
+      <div class="sysapps-filters">
+        <button id="filter-games-btn" class="filter-tab active">${t('ui.forms.filterGamesEmulators') || 'Juegos y Emuladores'}</button>
+        <button id="filter-all-btn" class="filter-tab">${t('ui.forms.filterAllApps') || 'Todas las aplicaciones'}</button>
+      </div>
+      <div id="sysapps-list" class="sysapps-list">
+        <div class="sysapps-loading">
+          <div class="scraping-spinner"></div>
+          <span>Cargando aplicaciones...</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalBackdrop);
+
+  const closeModal = () => modalBackdrop.remove();
+  document.getElementById('close-sysapps-btn').addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) closeModal();
+  });
+
+  let allApps = [];
+  try {
+    allApps = await ipcRenderer.invoke('get-system-apps');
+  } catch (e) {
+    console.error('Error obteniendo aplicaciones del sistema:', e);
+  }
+
+  let activeFilter = 'games';
+  let searchQuery = '';
+
+  const listContainer = document.getElementById('sysapps-list');
+  const searchInput = document.getElementById('sysapps-search-input');
+  const filterGamesBtn = document.getElementById('filter-games-btn');
+  const filterAllBtn = document.getElementById('filter-all-btn');
+
+  // Si no hay juegos/emuladores específicos, cambiar a todas
+  if (allApps.length > 0 && !allApps.some(a => a.isGameOrEmulator)) {
+    activeFilter = 'all';
+    filterAllBtn.classList.add('active');
+    filterGamesBtn.classList.remove('active');
+  }
+
+  function renderApps() {
+    listContainer.innerHTML = '';
+    const q = searchQuery.toLowerCase().trim();
+
+    const filtered = allApps.filter(app => {
+      if (activeFilter === 'games' && !app.isGameOrEmulator) {
+        return false;
+      }
+      if (q) {
+        const matchName = app.name.toLowerCase().includes(q);
+        const matchExec = app.exec.toLowerCase().includes(q);
+        const matchComment = (app.comment || '').toLowerCase().includes(q);
+        const matchCat = (app.categories || '').toLowerCase().includes(q);
+        return matchName || matchExec || matchComment || matchCat;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      listContainer.innerHTML = `
+        <div class="sysapps-empty">
+          <span class="material-symbols-outlined" style="font-size: 32px; color: #888;">search_off</span>
+          <p>${t('ui.forms.noAppsFound') || 'No se encontraron aplicaciones'}</p>
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(app => {
+      const item = document.createElement('div');
+      item.className = 'sysapp-item';
+
+      let iconHtml = '';
+      if (app.iconData) {
+        iconHtml = `<img class="sysapp-icon" src="${app.iconData}" alt="${app.name}" />`;
+      } else {
+        iconHtml = `<div class="sysapp-icon-fallback"><span class="material-symbols-outlined">sports_esports</span></div>`;
+      }
+
+      item.innerHTML = `
+        ${iconHtml}
+        <div class="sysapp-info">
+          <div class="sysapp-name">${app.name}</div>
+          <div class="sysapp-cmd" title="${app.exec}">${app.exec}</div>
+        </div>
+      `;
+
+      item.addEventListener('click', () => {
+        const execInput = document.getElementById('emu-exec');
+        if (execInput) {
+          execInput.value = app.exec;
+        }
+        const nameInput = document.getElementById('emu-name');
+        if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
+          nameInput.value = app.name;
+        }
+        closeModal();
+      });
+
+      listContainer.appendChild(item);
+    });
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    renderApps();
+  });
+
+  filterGamesBtn.addEventListener('click', () => {
+    activeFilter = 'games';
+    filterGamesBtn.classList.add('active');
+    filterAllBtn.classList.remove('active');
+    renderApps();
+  });
+
+  filterAllBtn.addEventListener('click', () => {
+    activeFilter = 'all';
+    filterAllBtn.classList.add('active');
+    filterGamesBtn.classList.remove('active');
+    renderApps();
+  });
+
+  renderApps();
+  if (searchInput) {
+    setTimeout(() => searchInput.focus(), 100);
+  }
+}
+
 function loadIcons(selectedIcon = null) {
   // Lista de íconos disponibles (nombres base para mapear con romExtensions)
   const icons = [
@@ -1629,6 +2107,16 @@ function loadIcons(selectedIcon = null) {
     
     select.appendChild(option);
   });
+
+  const preview = document.getElementById('emu-icon-preview');
+  function updateIconPreview() {
+    if (preview && select.value) {
+      preview.src = `../assets/console-icons/${select.value.toLowerCase()}.png`;
+      preview.style.display = 'block';
+    }
+  }
+  select.addEventListener('change', updateIconPreview);
+  updateIconPreview();
 }
 
 // Guardar nuevo emulador
@@ -1652,9 +2140,15 @@ async function saveEmu(editIndex = -1) {
   // Agregar nuevo emulador o editar existente
   if (editIndex >= 0) {
     config.emulators[editIndex] = { name, icon, execPath, gamesPath, coversPath };
+    emulatorGamesCache.delete(editIndex);
+    emulatorDOMCache.delete(editIndex);
+    emulatorScrapedSet.delete(editIndex);
   } else {
     if (!config.emulators) config.emulators = [];
     config.emulators.push({ name, icon, execPath, gamesPath, coversPath });
+    emulatorGamesCache.clear();
+    emulatorDOMCache.clear();
+    emulatorScrapedSet.clear();
   }
   
   // Guardar configuración
@@ -1697,9 +2191,14 @@ function showConfigModal() {
           <!-- Sidebar -->
           <aside class="config-sidebar">
             <!-- Profile Section -->
-            <div class="config-profile-card">
-              <div class="config-profile-image-container">
-                <div id="profile-image-preview" class="config-profile-image" style="cursor: pointer;" title="${t('ui.configuration.profileImage')}"></div>
+            <div class="config-profile-card ${config.theme && config.theme.profileImage ? 'has-custom-image' : ''}">
+              <div class="config-profile-wrapper ${config.theme && config.theme.profileImage ? 'has-custom-image' : ''}">
+                <div class="config-profile-image-container ${config.theme && config.theme.profileImage ? 'has-custom-image' : ''}">
+                  <div id="profile-image-preview" class="config-profile-image" style="cursor: pointer;" title="${t('ui.configuration.profileImage')}"></div>
+                </div>
+                <div id="profile-remove-hover-text" class="config-profile-remove-text" style="${config.theme && config.theme.profileImage ? '' : 'display: none;'}">
+                  ${t('ui.configuration.removeProfilePhoto') || 'Eliminar foto'}
+                </div>
               </div>
               <input id="profile-image-input" type="file" accept="image/*" style="display: none;" />
               <button class="config-profile-btn" id="profile-remove-btn" style="display: none; margin-top: 8px;">
@@ -1714,9 +2213,12 @@ function showConfigModal() {
                 <span class="material-symbols-outlined">palette</span>
                 ${t('ui.menu.interface')}
               </button>
-              <button class="config-nav-item config-menu-item" data-section="update">
-                <span class="material-symbols-outlined">system_update</span>
-                ${t('ui.menu.update')}
+              <button class="config-nav-item config-menu-item" data-section="update" style="position: relative; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="material-symbols-outlined">system_update</span>
+                  <span>${t('ui.menu.update')}</span>
+                </div>
+                <span id="update-pulse-indicator" class="update-pulse-dot" style="display: none;"></span>
               </button>
               <button class="config-nav-item config-menu-item" data-section="about">
                 <span class="material-symbols-outlined">info</span>
@@ -1822,8 +2324,49 @@ function showConfigModal() {
                   </div>
                 </div>
 
-                <!-- Tab Icon Style Section -->
+                <!-- Botón Aplicar Tema Rápido (debajo de los colores) -->
+                <div class="config-card full-width" style="display: flex; justify-content: flex-end; background: transparent; border: none; padding: 4px 0 12px 0; box-shadow: none;">
+                  <button id="apply-theme-quick-btn" class="btn-config btn-config-secondary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 500;">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">palette</span>
+                    ${t('ui.configuration.applyTheme')}
+                  </button>
+                </div>
 
+                <!-- Estilo de Pestañas -->
+                <div class="config-card full-width" id="card-tab-style">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">style</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.tabStyle')}</p>
+                      <p class="desc">${t('ui.configuration.tabStyleDesc')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action" style="min-width: 200px;">
+                    <select id="tab-style-select">
+                      <option value="both">${t('ui.configuration.tabStyleBoth')}</option>
+                      <option value="text">${t('ui.configuration.tabStyleText')}</option>
+                      <option value="icons">${t('ui.configuration.tabStyleIcons')}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Alineación de Pestañas -->
+                <div class="config-card full-width" id="card-tab-alignment">
+                  <div class="config-card-info">
+                    <div class="config-card-icon"><span class="material-symbols-outlined">format_align_center</span></div>
+                    <div class="config-card-text">
+                      <p class="title">${t('ui.configuration.tabAlignment')}</p>
+                      <p class="desc">${t('ui.configuration.tabAlignmentDesc')}</p>
+                    </div>
+                  </div>
+                  <div class="config-card-action" style="min-width: 200px;">
+                    <select id="tab-alignment-select">
+                      <option value="left">${t('ui.configuration.alignLeft')}</option>
+                      <option value="center">${t('ui.configuration.alignCenter')}</option>
+                      <option value="right">${t('ui.configuration.alignRight')}</option>
+                    </select>
+                  </div>
+                </div>
 
                 <!-- Language Section -->
                 <div class="config-card full-width">
@@ -1881,7 +2424,7 @@ function showConfigModal() {
                   ${t('ui.configuration.resetDefault')}
                 </button>
                 <button id="apply-theme-btn" class="btn-config btn-config-primary">
-                  ${t('ui.configuration.applyTheme')}
+                  ${t('ui.configuration.saveConfig') || 'Guardar configuración'}
                 </button>
               </div>
             </div>
@@ -1908,7 +2451,11 @@ function showConfigModal() {
                   <div id="github-update-status" style="font-size: 14px; display: none; margin-top: 8px; color: var(--on-surface-variant);"></div>
                   <button id="download-github-update-btn" class="btn-config btn-config-primary" style="display: none; background-color: #28a745; margin-top: 8px;">
                     <span class="material-symbols-outlined">download</span>
-                    ${t('ui.update.downloadUpdate') || 'Download update'}
+                    ${t('ui.update.downloadUpdate') || 'Descargar actualización'}
+                  </button>
+                  <button id="restart-app-btn" class="btn-config btn-config-primary" style="display: none; background-color: #007acc; margin-top: 8px;">
+                    <span class="material-symbols-outlined">restart_alt</span>
+                    ${t('ui.messages.restartApp') || 'Reiniciar aplicación'}
                   </button>
                 </div>
               </div>
@@ -1943,7 +2490,7 @@ function showConfigModal() {
 
               <div class="config-cards-grid">
                 <div class="about-card-modern" style="grid-column: 1 / -1;">
-                  <h4><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 20px;">emoji_people</span>${t('ui.about.information')}</h4>
+                  <h4><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 20px;">info</span>${t('ui.about.information')}</h4>
                   <p>${t('ui.about.welcomeMessage')}</p>
                   <p>${t('ui.about.projectDescription')}</p>
                   <p>${t('ui.about.enjoyMessage')}</p>
@@ -2066,6 +2613,17 @@ function showConfigModal() {
       mainBackgroundColorInput.value = getCSSColor('--main-background-color', '#222222');
       updateColorValue(mainBackgroundColorInput);
     }
+
+    // Cargar opciones de pestañas
+    const tabStyleSelect = document.getElementById('tab-style-select');
+    const tabAlignmentSelect = document.getElementById('tab-alignment-select');
+
+    if (tabStyleSelect) {
+      tabStyleSelect.value = (config.theme && config.theme.tabStyle) || 'both';
+    }
+    if (tabAlignmentSelect) {
+      tabAlignmentSelect.value = (config.theme && config.theme.tabAlignment) || 'left';
+    }
   }
   
   // Función para actualizar el valor mostrado del color
@@ -2130,6 +2688,14 @@ function showConfigModal() {
     config.theme.tabTextColor = tabTextColor;
     config.theme.mainBackgroundColor = mainBackgroundColor;
     
+    // Guardar opciones de pestañas
+    const tabStyle = document.getElementById('tab-style-select')?.value || 'both';
+    const tabAlignment = document.getElementById('tab-alignment-select')?.value || 'left';
+    
+    config.theme.tabStyle = tabStyle;
+    config.theme.tabAlignment = tabAlignment;
+    delete config.theme.navigationMode;
+
     // Guardar configuración
     saveConfig();
     
@@ -2151,7 +2717,7 @@ function showConfigModal() {
     // Aplicar colores a las pestañas usando la función centralizada
     applyTabColors();
     
-    // Volver a renderizar las pestañas para aplicar cambios de iconos
+    // Volver a renderizar las pestañas para aplicar cambios de iconos o modo
     renderTabs();
     
     // Mostrar notificación menos intrusiva en lugar de alert
@@ -2205,6 +2771,9 @@ function showConfigModal() {
     document.getElementById('tab-text-color').value = '#ffffff';
     document.getElementById('main-background-color').value = '#222222';
     
+    if (document.getElementById('tab-style-select')) document.getElementById('tab-style-select').value = 'both';
+    if (document.getElementById('tab-alignment-select')) document.getElementById('tab-alignment-select').value = 'left';
+
     // Actualizar los valores mostrados
     colorInputs.forEach(input => updateColorValue(input));
     
@@ -2246,9 +2815,46 @@ function showConfigModal() {
     }
   });
   
-  // Event listeners para botones
-  document.getElementById('apply-theme-btn')?.addEventListener('click', applyTheme);
-  document.getElementById('reset-theme-btn')?.addEventListener('click', resetTheme);
+  // Event listeners para botones de tema y configuración
+  document.getElementById('apply-theme-quick-btn')?.addEventListener('click', () => {
+    applyTheme();
+    configModal.remove();
+  });
+  
+  document.getElementById('apply-theme-btn')?.addEventListener('click', () => {
+    applyTheme();
+    configModal.remove();
+  });
+  
+  document.getElementById('reset-theme-btn')?.addEventListener('click', () => {
+    const confirmModal = document.createElement('div');
+    confirmModal.className = 'confirm-modal';
+    confirmModal.style.zIndex = '12000';
+    confirmModal.innerHTML = `
+      <div class="confirm-content">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: #ff9800;">warning</span>
+          ${t('ui.configuration.resetDefault')}
+        </h3>
+        <p style="margin-top: 10px;">${t('ui.messages.confirmResetTheme') || '¿Deseas restablecer los colores y el estilo del tema a sus valores originales?'}</p>
+        <p class="confirm-warning" style="margin-top: 10px; font-size: 13px; color: var(--on-surface-variant);">${t('ui.messages.confirmResetThemeWarning') || 'Se restablecerá la configuración visual. Tus consolas y juegos configurados NO se verán afectados.'}</p>
+        <div class="confirm-buttons" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="confirm-reset-cancel" class="btn btn-secondary">${t('ui.buttons.cancel') || 'Cancelar'}</button>
+          <button id="confirm-reset-ok" class="btn btn-danger">${t('ui.buttons.confirm') || 'Restablecer'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(confirmModal);
+
+    document.getElementById('confirm-reset-cancel').addEventListener('click', () => {
+      confirmModal.remove();
+    });
+
+    document.getElementById('confirm-reset-ok').addEventListener('click', () => {
+      confirmModal.remove();
+      resetTheme();
+    });
+  });
   
   // Event listeners para música de fondo
   document.getElementById('select-audio-btn')?.addEventListener('click', async () => {
@@ -2307,6 +2913,32 @@ function showConfigModal() {
     const { shell } = require('electron');
     shell.openExternal('https://gessendarien.github.io/cascabel-launcher');
   });
+
+  // Comprobación silenciosa de actualizaciones para encender el punto blanco
+  (async () => {
+    try {
+      const result = await ipcRenderer.invoke('check-update-github');
+      if (result && result.success && result.tag) {
+        const latestTagStr = result.tag.replace(/^v/, '');
+        const appInfo = await ipcRenderer.invoke('get-app-info');
+        const currentVersionStr = appInfo.version.replace(/^v/, '');
+        
+        const v1parts = latestTagStr.split('.').map(Number);
+        const v2parts = currentVersionStr.split('.').map(Number);
+        let isNewer = false;
+        for (let i = 0; i < Math.max(v1parts.length, v2parts.length); ++i) {
+          const v1 = v1parts[i] || 0;
+          const v2 = v2parts[i] || 0;
+          if (v1 > v2) { isNewer = true; break; }
+          if (v1 < v2) { break; }
+        }
+        if (isNewer) {
+          const dot = document.getElementById('update-pulse-indicator');
+          if (dot) dot.style.display = 'inline-block';
+        }
+      }
+    } catch (e) {}
+  })();
   
   // Lógica para comprobar y descargar actualizaciones
   let currentDownloadUrl = '';
@@ -2314,12 +2946,14 @@ function showConfigModal() {
   document.getElementById('check-github-update-btn')?.addEventListener('click', async () => {
     const checkBtn = document.getElementById('check-github-update-btn');
     const downloadBtn = document.getElementById('download-github-update-btn');
+    const restartBtn = document.getElementById('restart-app-btn');
     const statusDiv = document.getElementById('github-update-status');
     
     checkBtn.disabled = true;
     statusDiv.style.display = 'block';
-    statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">sync</span> ${t('ui.update.checkingUpdates') || 'Checking...\\'}`;
+    statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">sync</span> ${t('ui.update.checkingUpdates') || 'Comprobando actualizaciones...'}`;
     downloadBtn.style.display = 'none';
+    if (restartBtn) restartBtn.style.display = 'none';
 
     try {
       const result = await ipcRenderer.invoke('check-update-github');
@@ -2341,8 +2975,11 @@ function showConfigModal() {
         }
         
         if (isNewer) {
+          const dot = document.getElementById('update-pulse-indicator');
+          if (dot) dot.style.display = 'inline-block';
+
           statusDiv.style.color = '#28a745';
-          statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">new_releases</span> <strong>${t('ui.update.newVersionAvailable') || 'New version available:'} ${latestTagStr}</strong>`;
+          statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">new_releases</span> <strong>${t('ui.update.newVersionAvailable') || 'Nueva versión disponible:'} ${latestTagStr}</strong>`;
           
           const isWindows = navigator.userAgent.toLowerCase().indexOf('win') > -1;
           const isLinux = navigator.userAgent.toLowerCase().indexOf('linux') > -1;
@@ -2361,11 +2998,11 @@ function showConfigModal() {
             currentDownloadName = targetAsset.name;
             downloadBtn.style.display = 'inline-flex';
           } else {
-            statusDiv.innerHTML += `<br>${t('ui.update.noDownloads') || 'No compatible downloads found in the release.'}`;
+            statusDiv.innerHTML += `<br>${t('ui.update.noDownloads') || 'No se encontraron descargas compatibles para tu sistema operativo.'}`;
           }
         } else {
           statusDiv.style.color = 'var(--on-surface-variant)';
-          statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">check_circle</span> ${t('ui.messages.usingLatestVersion') || 'You are using the latest version'}`;
+          statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">check_circle</span> ${t('ui.messages.usingLatestVersion') || 'Estás usando la última versión disponible'}`;
         }
       } else {
         statusDiv.style.color = '#dc3545';
@@ -2381,24 +3018,36 @@ function showConfigModal() {
 
   document.getElementById('download-github-update-btn')?.addEventListener('click', async () => {
     const downloadBtn = document.getElementById('download-github-update-btn');
+    const restartBtn = document.getElementById('restart-app-btn');
     const statusDiv = document.getElementById('github-update-status');
     
     downloadBtn.disabled = true;
     statusDiv.style.color = 'var(--on-surface-variant)';
-    statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">downloading</span> ${t('ui.update.downloadingUpdate') || 'Downloading update...\\'}`;
+    statusDiv.innerHTML = `<span class="material-symbols-outlined animate-spin" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">downloading</span> ${t('ui.update.downloadingUpdate') || 'Descargando actualización...'}`;
     
     try {
       const result = await ipcRenderer.invoke('download-github-update', { url: currentDownloadUrl, name: currentDownloadName });
       if (result.success) {
         statusDiv.style.color = '#28a745';
-        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">download_done</span> <strong>${t('ui.update.updateDownloadedSuccess') || 'Update downloaded successfully'}</strong><br><small>${result.filePath}</small><br><br><span style="color: var(--on-surface); font-weight: 500;">${t('ui.update.restartToUpdate') || 'Close the application and run the newly downloaded file.'}</span>`;
+        statusDiv.innerHTML = `
+          <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">download_done</span> 
+          <strong>${t('ui.update.updateDownloadedSuccess') || 'Actualización descargada con éxito'}</strong><br>
+          <small style="color: var(--on-surface-variant); word-break: break-all;">${result.filePath}</small><br><br>
+          <span style="color: var(--on-surface); font-weight: 500;">${t('ui.messages.updateRestartPrompt') || 'Haz clic para reiniciar la aplicación con la nueva versión.'}</span>
+        `;
         
         const checkBtn = document.getElementById('check-github-update-btn');
         if (checkBtn) checkBtn.disabled = true;
         
         downloadBtn.style.display = 'none';
+        if (restartBtn) {
+          restartBtn.style.display = 'inline-flex';
+          restartBtn.onclick = () => {
+            ipcRenderer.invoke('restart-app', result.filePath);
+          };
+        }
       } else if (result.canceled) {
-        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">cancel</span> Download canceled.`;
+        statusDiv.innerHTML = `<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">cancel</span> Descarga cancelada.`;
         downloadBtn.disabled = false;
       } else {
         statusDiv.style.color = '#dc3545';
@@ -2425,34 +3074,7 @@ function showConfigModal() {
   
   // Función para actualizar la imagen de perfil
   function updateProfileImage() {
-    const profileImage = document.querySelector('.profile-image-navbar');
-    
-    if (profileImage) {
-      if (config.theme && config.theme.profileImage) {
-        profileImage.src = config.theme.profileImage;
-      } else {
-        // Usar imagen por defecto de cascabel.png
-        profileImage.src = '../assets/cascabel.png';
-      }
-    }
-    
-    // Actualizar también la vista previa en el modal
-    const profilePreview = document.getElementById('profile-image-preview');
-    const profileContainer = document.querySelector('.profile-image-container');
-    
-    if (profilePreview) {
-      if (config.theme && config.theme.profileImage) {
-        profilePreview.style.backgroundImage = `url(${config.theme.profileImage})`;
-        // Añadir clase al contenedor para mostrar X
-        if (profileContainer) profileContainer.classList.add('has-custom-image');
-      } else {
-        profilePreview.style.backgroundImage = 'url(../assets/cascabel.png)';
-        // Quitar clase del contenedor para ocultar X
-        if (profileContainer) profileContainer.classList.remove('has-custom-image');
-      }
-      profilePreview.style.backgroundSize = 'cover';
-      profilePreview.style.backgroundPosition = 'center';
-    }
+    globalUpdateProfileImage();
   }
   
   // Event listeners para imagen de perfil
@@ -2461,15 +3083,20 @@ function showConfigModal() {
     document.getElementById('profile-image-input').click();
   });
   
-  // Clic en la X para quitar la imagen
-  document.getElementById('profile-remove-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation(); // Evitar que se propague al contenedor
-    if (config.theme) {
+  // Función para eliminar foto de perfil
+  const handleRemoveModalProfilePhoto = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (config.theme && config.theme.profileImage) {
       delete config.theme.profileImage;
       saveConfig();
-      updateProfileImage();
+      globalUpdateProfileImage();
     }
-  });
+  };
+
+  // Clic en el texto fijo "Eliminar foto"
+  document.getElementById('profile-remove-hover-text')?.addEventListener('click', handleRemoveModalProfilePhoto);
+  document.getElementById('profile-remove-btn')?.addEventListener('click', handleRemoveModalProfilePhoto);
   
   document.getElementById('profile-image-input')?.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -2479,14 +3106,14 @@ function showConfigModal() {
         config.theme = config.theme || {};
         config.theme.profileImage = e.target.result;
         saveConfig();
-        updateProfileImage();
+        globalUpdateProfileImage();
       };
       reader.readAsDataURL(file);
     }
   });
   
   // Inicializar imagen de perfil
-  setTimeout(() => updateProfileImage(), 150);
+  setTimeout(() => globalUpdateProfileImage(), 150);
   
   // Event listener para configuración de tooltips
   document.getElementById('show-tooltips')?.addEventListener('change', (e) => {

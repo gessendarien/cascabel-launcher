@@ -276,18 +276,195 @@ ipcMain.handle('select-image-file', async (event, options = {}) => {
   return result.filePaths[0] || '';
 });
 
+// Obtener aplicaciones del sistema en Linux
+function getLinuxSystemApps() {
+  const os = require('os');
+  const dirs = [
+    path.join(os.homedir(), '.local/share/applications'),
+    '/usr/local/share/applications',
+    '/usr/share/applications',
+    '/var/lib/flatpak/exports/share/applications',
+    path.join(os.homedir(), '.local/share/flatpak/exports/share/applications'),
+    '/var/lib/snapd/desktop/applications'
+  ];
+
+  const iconDirs = [
+    '/var/lib/flatpak/exports/share/icons/hicolor/scalable/apps',
+    '/var/lib/flatpak/exports/share/icons/hicolor/128x128/apps',
+    '/var/lib/flatpak/exports/share/icons/hicolor/64x64/apps',
+    '/var/lib/flatpak/exports/share/icons/hicolor/48x48/apps',
+    path.join(os.homedir(), '.local/share/flatpak/exports/share/icons/hicolor/scalable/apps'),
+    path.join(os.homedir(), '.local/share/icons/hicolor/scalable/apps'),
+    '/usr/share/icons/hicolor/scalable/apps',
+    '/usr/share/icons/hicolor/128x128/apps',
+    '/usr/share/icons/hicolor/64x64/apps',
+    '/usr/share/icons/hicolor/48x48/apps',
+    '/usr/share/pixmaps'
+  ];
+
+  function resolveIcon(iconName) {
+    if (!iconName) return null;
+    if (path.isAbsolute(iconName) && fs.existsSync(iconName)) return iconName;
+    for (const d of iconDirs) {
+      for (const ext of ['.svg', '.png', '']) {
+        const full = path.join(d, iconName + ext);
+        if (fs.existsSync(full)) return full;
+      }
+    }
+    return null;
+  }
+
+  const apps = [];
+  const seen = new Set();
+
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    let files = [];
+    try { files = fs.readdirSync(dir); } catch (e) { continue; }
+    for (const f of files) {
+      if (!f.endsWith('.desktop') || seen.has(f)) continue;
+      seen.add(f);
+      try {
+        const fullPath = path.join(dir, f);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        if (/^NoDisplay=true/m.test(content)) continue;
+        if (!/^Type=Application/m.test(content)) continue;
+
+        const nameMatch = content.match(/^Name=(.*)$/m);
+        const execMatch = content.match(/^Exec=(.*)$/m);
+        const iconMatch = content.match(/^Icon=(.*)$/m);
+        const catMatch = content.match(/^Categories=(.*)$/m);
+        const commentMatch = content.match(/^Comment=(.*)$/m);
+
+        if (nameMatch && execMatch) {
+          const rawExec = execMatch[1].trim();
+          const name = nameMatch[1].trim();
+          const categories = catMatch ? catMatch[1].trim() : '';
+          const comment = commentMatch ? commentMatch[1].trim() : '';
+          const rawIcon = iconMatch ? iconMatch[1].trim() : '';
+          const resolvedIcon = resolveIcon(rawIcon);
+
+          let iconData = null;
+          if (resolvedIcon && fs.existsSync(resolvedIcon)) {
+            try {
+              const ext = path.extname(resolvedIcon).toLowerCase();
+              const mime = ext === '.svg' ? 'image/svg+xml' : (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png');
+              iconData = `data:${mime};base64,${fs.readFileSync(resolvedIcon).toString('base64')}`;
+            } catch (err) {}
+          }
+
+          const catList = categories.split(';').map(c => c.trim().toLowerCase());
+          const isGameOrEmulator = catList.includes('game') || 
+                                  catList.includes('emulator') || 
+                                  /\b(game|emulator|emulation|retroarch|dolphin|pcsx|snes|nes|mupen|duckstation|mgba|cemu|rpcs3|yuzu|ryujinx|citra)\b/i.test(name) ||
+                                  /\b(game|emulator|emulation|retroarch|dolphin|pcsx|snes|nes|mupen|duckstation|mgba|cemu|rpcs3|yuzu|ryujinx|citra)\b/i.test(comment);
+
+          apps.push({
+            name,
+            exec: rawExec,
+            iconData,
+            categories,
+            comment,
+            isGameOrEmulator
+          });
+        }
+      } catch (e) {}
+    }
+  }
+
+  apps.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  return apps;
+}
+
+// Handler IPC para listar aplicaciones instaladas en el sistema
+ipcMain.handle('get-system-apps', async () => {
+  if (process.platform !== 'linux') {
+    return [];
+  }
+  return getLinuxSystemApps();
+});
+
 // Lanzar juego
 ipcMain.handle('launch-game', async (event, emulatorPath, gamePath) => {
   const { spawn } = require('child_process');
   try {
-    spawn(emulatorPath, [gamePath], {
-      detached: true,
-      stdio: 'ignore'
-    }).unref();
-    return true;
+    if (!emulatorPath || !emulatorPath.trim()) {
+      const errorMsg = 'No se configuró la ruta o comando del ejecutable del emulador.';
+      console.error(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    if (!gamePath || !fs.existsSync(gamePath)) {
+      const errorMsg = `No se encontró el archivo del juego en:\n${gamePath || '(Ruta no encontrada)'}`;
+      console.error(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const trimmedExec = emulatorPath.trim();
+    const isDirectFile = fs.existsSync(trimmedExec) && fs.statSync(trimmedExec).isFile();
+
+    let spawnCmd;
+    let spawnArgs;
+    let spawnOptions = { detached: true, stdio: 'ignore' };
+
+    if (isDirectFile) {
+      // Asegurar permisos de ejecución en Linux/macOS si es un AppImage o binario directo
+      if (process.platform !== 'win32') {
+        try {
+          fs.accessSync(trimmedExec, fs.constants.X_OK);
+        } catch (err) {
+          try {
+            fs.chmodSync(trimmedExec, 0o755);
+          } catch (chmodErr) {
+            console.warn('No se pudo asignar permisos de ejecución a ' + trimmedExec, chmodErr);
+          }
+        }
+      }
+      spawnCmd = trimmedExec;
+      spawnArgs = [gamePath];
+    } else {
+      // Es un comando del sistema (flatpak, comando con flags %f, etc.)
+      let cmdStr = trimmedExec;
+      if (/%[fFuU]/.test(cmdStr)) {
+        cmdStr = cmdStr.replace(/%[fFuU]/g, `"${gamePath}"`);
+      } else if (cmdStr.includes('@@ @@')) {
+        cmdStr = cmdStr.replace('@@ @@', `@@ "${gamePath}" @@`);
+      } else {
+        cmdStr = `${cmdStr} "${gamePath}"`;
+      }
+      spawnCmd = cmdStr;
+      spawnArgs = [];
+      spawnOptions.shell = true;
+    }
+
+    return new Promise((resolve) => {
+      let hasResponded = false;
+      const child = spawn(spawnCmd, spawnArgs, spawnOptions);
+
+      child.on('error', (err) => {
+        console.error('Error al iniciar el proceso del emulador:', err);
+        if (!hasResponded) {
+          hasResponded = true;
+          resolve({
+            success: false,
+            error: `Error al iniciar el emulador: ${err.message}`
+          });
+        }
+      });
+
+      child.unref();
+
+      // Si no emitió error inmediato en el arranque, consideramos éxito
+      setTimeout(() => {
+        if (!hasResponded) {
+          hasResponded = true;
+          resolve({ success: true });
+        }
+      }, 500);
+    });
   } catch (error) {
     console.error('Error launching game:', error);
-    return false;
+    return { success: false, error: error.message };
   }
 });
 
@@ -367,45 +544,24 @@ ipcMain.handle('download-github-update', async (event, options) => {
     const isWindows = process.platform === 'win32';
     const isAppImage = process.env.APPIMAGE;
     
-    // Suggest the current file name and directory
-    let defaultFileName = 'Cascabel.exe';
+    // Ruta donde se está ejecutando la aplicación actualmente
     let currentAppPath = process.execPath;
-    
-    if (isWindows) {
-      defaultFileName = path.basename(process.execPath);
-    } else if (isAppImage) {
+    if (isAppImage) {
       currentAppPath = process.env.APPIMAGE;
-      defaultFileName = path.basename(process.env.APPIMAGE);
+    } else if (isWindows) {
+      currentAppPath = process.execPath;
     } else {
-      defaultFileName = 'Cascabel.AppImage';
-      currentAppPath = path.join(process.cwd(), defaultFileName);
+      currentAppPath = path.join(process.cwd(), releaseName || 'Cascabel.AppImage');
     }
 
-    const { filePath: selectedFilePath } = await dialog.showSaveDialog({
-      title: 'Guardar actualización',
-      defaultPath: currentAppPath,
-      buttonLabel: 'Guardar'
-    });
-
-    if (!selectedFilePath) {
-      return { success: false, canceled: true };
-    }
-
-    let filePath = selectedFilePath;
-    const selectedDir = path.dirname(selectedFilePath);
-    const currentDir = path.dirname(currentAppPath);
-    const selectedName = path.basename(selectedFilePath);
-
-    // If saved in a different folder, and they kept the default name, use the release name
-    if (selectedDir !== currentDir && selectedName === defaultFileName) {
-       if (releaseName && !releaseName.includes('?')) {
-           filePath = path.join(selectedDir, releaseName);
-       }
+    let filePath = currentAppPath;
+    if (isWindows) {
+      // En Windows el exe en ejecución puede estar bloqueado para sobrescribir
+      filePath = path.join(path.dirname(currentAppPath), releaseName || 'Cascabel-update.exe');
     }
 
     return new Promise((resolve) => {
       const { net } = require('electron');
-      // Set the Accept header to get the binary asset
       const request = net.request({
         method: 'GET',
         url: assetUrl,
@@ -415,6 +571,29 @@ ipcMain.handle('download-github-update', async (event, options) => {
         }
       });
       
+      const handleStream = (res) => {
+        const tempFilePath = filePath + '.download';
+        const file = fs.createWriteStream(tempFilePath);
+        res.on('data', (chunk) => { file.write(chunk); });
+        res.on('end', () => {
+          file.end(() => {
+            try {
+              if (fs.existsSync(filePath)) {
+                try { fs.unlinkSync(filePath); } catch (e) { /* Si no se puede borrar, intentar renombrar */ }
+              }
+              fs.renameSync(tempFilePath, filePath);
+              if (filePath.toLowerCase().endsWith('.appimage')) {
+                fs.chmodSync(filePath, 0o755);
+              }
+              resolve({ success: true, filePath });
+            } catch (err) {
+              resolve({ success: false, error: err.message });
+            }
+          });
+        });
+        file.on('error', (err) => resolve({ success: false, error: err.message }));
+      };
+
       request.on('response', (response) => {
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
           const redirectReq = net.request(response.headers.location);
@@ -423,50 +602,12 @@ ipcMain.handle('download-github-update', async (event, options) => {
               resolve({ success: false, error: `HTTP ${res.statusCode} en redirección` });
               return;
             }
-            const tempFilePath = filePath + '.download';
-            const file = fs.createWriteStream(tempFilePath);
-            res.on('data', (chunk) => { file.write(chunk); });
-            res.on('end', () => {
-              file.end(() => {
-                try {
-                  if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                  }
-                  fs.renameSync(tempFilePath, filePath);
-                  if (filePath.toLowerCase().endsWith('.appimage')) {
-                    fs.chmodSync(filePath, 0o755);
-                  }
-                  resolve({ success: true, filePath });
-                } catch (err) {
-                  resolve({ success: false, error: err.message });
-                }
-              });
-            });
-            file.on('error', (err) => resolve({ success: false, error: err.message }));
+            handleStream(res);
           });
           redirectReq.on('error', (err) => resolve({ success: false, error: err.message }));
           redirectReq.end();
         } else if (response.statusCode === 200) {
-          const tempFilePath = filePath + '.download';
-          const file = fs.createWriteStream(tempFilePath);
-          response.on('data', (chunk) => { file.write(chunk); });
-          response.on('end', () => {
-            file.end(() => {
-              try {
-                if (fs.existsSync(filePath)) {
-                  fs.unlinkSync(filePath);
-                }
-                fs.renameSync(tempFilePath, filePath);
-                if (filePath.toLowerCase().endsWith('.appimage')) {
-                  fs.chmodSync(filePath, 0o755);
-                }
-                resolve({ success: true, filePath });
-              } catch (err) {
-                resolve({ success: false, error: err.message });
-              }
-            });
-          });
-          file.on('error', (err) => resolve({ success: false, error: err.message }));
+          handleStream(response);
         } else {
           resolve({ success: false, error: `HTTP ${response.statusCode}` });
         }
@@ -476,6 +617,17 @@ ipcMain.handle('download-github-update', async (event, options) => {
     });
   } catch (error) {
     return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('restart-app', async (event, newExecutablePath) => {
+  try {
+    const execPath = newExecutablePath || process.env.APPIMAGE || process.execPath;
+    app.relaunch({ execPath });
+    app.exit(0);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 });
 

@@ -42,14 +42,23 @@
       "consoleType": "Console",
       "executablePath": "Caminho do executável",
       "gamesPath": "Caminho dos jogos",
-      "coversPath": "Caminho das capas",
-      "coverNote": "A imagem deve corresponder ao nome do jogo (jpg, jpeg, png, gif, bmp ou webp)."
+      "coversPath": "Pasta de capas",
+      "coverNote": "As capas não encontradas podem ser colocadas automaticamente ou manualmente nesta pasta com o mesmo nome do jogo.",
+      "file": "Executável",
+      "systemApp": "Instalado",
+      "selectSystemAppTitle": "Aplicativos do sistema",
+      "searchAppsPlaceholder": "Pesquisar aplicativo ou emulador...",
+      "filterGamesEmulators": "Jogos e Emuladores",
+      "filterAllApps": "Todos os aplicativos",
+      "noAppsFound": "Nenhum aplicativo encontrado",
+      "execPlaceholder": "Caminho do arquivo ou comando do sistema"
     },
     "configuration": {
       "title": "Configuração",
       "themeConfig": "Configuração do Tema",
       "themeDescription": "Personalizar as cores do Cascabel Launcher",
       "profileImage": "Imagem do Perfil",
+      "removeProfilePhoto": "Eliminar foto",
       "headerColor": "Cor do cabeçalho:",
       "tabSelected": "Aba selecionada:",
       "tabHover": "Hover da aba:",
@@ -66,13 +75,24 @@
       "audioNote": "Formatos suportados: MP3, OGG, WAV",
       "selectAudioPlaceholder": " Selecionar um arquivo de áudio",
       "applyTheme": "Aplicar Tema",
+      "saveConfig": "Salvar configuração",
       "resetDefault": "Redefinir para Padrão",
       "themeApplied": "Tema aplicado com sucesso",
       "iconNone": "Nenhum",
       "iconConsole": "Console",
       "iconController": "Controle",
       "tabIconStyle": "Estilo do ícone da aba",
-      "tabIconStyleDesc": "Escolha o ícone do console ou controle"
+      "tabIconStyleDesc": "Escolha o ícone do console ou controle",
+      "tabStyle": "Estilo das abas",
+      "tabStyleDesc": "Exibir ícones e texto, apenas texto ou apenas ícones",
+      "tabStyleBoth": "Ícones e texto",
+      "tabStyleText": "Apenas texto",
+      "tabStyleIcons": "Apenas ícones",
+      "tabAlignment": "Alinhamento das abas",
+      "tabAlignmentDesc": "Posicionamento das abas no cabeçalho (esquerda, centro, direita)",
+      "alignLeft": "Esquerda",
+      "alignCenter": "Centro",
+      "alignRight": "Direita"
     },
     "update": {
       "title": "Como atualizar",
@@ -169,7 +189,11 @@
       "noGamesFoundTitle": "Nenhum jogo encontrado",
       "selectOtherFolderButton": "Selecionar outra pasta",
       "errorLoadingGamesTitle": "Erro ao carregar jogos",
-      "retryButton": "Tentar novamente"
+      "retryButton": "Tentar novamente",
+      "confirmResetTheme": "Deseja redefinir as cores e o estilo do tema para os valores padrão?",
+      "confirmResetThemeWarning": "A personalização visual será restaurada para o padrão. Seus consoles e jogos configurados NÃO serão afetados.",
+      "restartApp": "Reiniciar aplicativo",
+      "updateRestartPrompt": "Atualização baixada e instalada. Clique para reiniciar e carregar a nova versão."
     },
     "contextMenu": {
       "edit": "Editar",
@@ -177,7 +201,9 @@
       "addTab": "Adicionar aba",
       "closeTab": "Fechar aba",
       "sort": "Ordenar",
-      "search": "Pesquisar"
+      "search": "Pesquisar",
+      "scanCovers": "Reescanear jogos e capas",
+      "removeCover": "Eliminar foto"
     }
   }
 }

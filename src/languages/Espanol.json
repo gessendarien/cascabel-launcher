@@ -42,14 +42,23 @@
       "consoleType": "Consola",
       "executablePath": "Ruta ejecutable",
       "gamesPath": "Ruta juegos",
-      "coversPath": "Ruta carátulas",
-      "coverNote": "La imagen debe coincidir con el nombre del juego (jpg, jpeg, png, gif, bmp o webp)."
+      "coversPath": "Carpeta de carátulas",
+      "coverNote": "Las carátulas no encontradas pueden ser colocadas de manera automática o manual en esta carpeta con el mismo nombre del juego.",
+      "file": "Ejecutable",
+      "systemApp": "Instalado",
+      "selectSystemAppTitle": "Aplicaciones del sistema",
+      "searchAppsPlaceholder": "Buscar aplicación o emulador...",
+      "filterGamesEmulators": "Juegos y Emuladores",
+      "filterAllApps": "Todas las aplicaciones",
+      "noAppsFound": "No se encontraron aplicaciones",
+      "execPlaceholder": "Ruta a archivo o comando del sistema"
     },
     "configuration": {
       "title": "Configuración",
       "themeConfig": "Configuración de Tema",
       "themeDescription": "Personaliza los colores de Cascabel Launcher",
       "profileImage": "Imagen de Perfil",
+      "removeProfilePhoto": "Eliminar foto",
       "headerColor": "Color de cabecera:",
       "tabSelected": "Pestaña seleccionada:",
       "tabHover": "Pestaña hover:",
@@ -66,13 +75,24 @@
       "audioNote": "Formatos soportados: MP3, OGG, WAV",
       "selectAudioPlaceholder": " Selecciona un archivo de audio",
       "applyTheme": "Aplicar Tema",
+      "saveConfig": "Guardar configuración",
       "resetDefault": "Restablecer por Defecto",
       "themeApplied": "Tema aplicado correctamente",
       "iconNone": "Ninguno",
       "iconConsole": "Consola",
       "iconController": "Control",
       "tabIconStyle": "Estilo de icono de pestaña",
-      "tabIconStyleDesc": "Elige entre icono de consola o control"
+      "tabIconStyleDesc": "Elige entre icono de consola o control",
+      "tabStyle": "Estilo de pestañas",
+      "tabStyleDesc": "Elige mostrar iconos y texto, solo texto o solo iconos",
+      "tabStyleBoth": "Iconos y texto",
+      "tabStyleText": "Solo texto",
+      "tabStyleIcons": "Solo iconos",
+      "tabAlignment": "Alineación de pestañas",
+      "tabAlignmentDesc": "Posición de las pestañas en la cabecera (izquierda, centro, derecha)",
+      "alignLeft": "Izquierda",
+      "alignCenter": "Centro",
+      "alignRight": "Derecha"
     },
     "update": {
       "title": "Cómo actualizar",
@@ -173,7 +193,11 @@
       "updateSuccessful": "¡Actualización exitosa!",
       "updateSuccessfulMessage": "Cascabel Launcher se ha actualizado de v{from} a v{to}",
       "welcomeTitle": "¡Bienvenido a Cascabel Launcher!",
-      "welcomeMessage": "Versión {version} instalada correctamente. ¡Disfruta organizando tu colección de juegos!"
+      "welcomeMessage": "Versión {version} instalada correctamente. ¡Disfruta organizando tu colección de juegos!",
+      "confirmResetTheme": "¿Deseas restablecer los colores y el estilo del tema a sus valores originales?",
+      "confirmResetThemeWarning": "Se restablecerá la personalización visual por defecto. Tus consolas y juegos configurados NO se verán afectados.",
+      "restartApp": "Reiniciar aplicación",
+      "updateRestartPrompt": "Actualización descargada e instalada. Haz clic para reiniciar y cargar la nueva versión."
     },
     "contextMenu": {
       "edit": "Editar",
@@ -181,7 +205,9 @@
       "addTab": "Agregar pestaña",
       "closeTab": "Cerrar pestaña",
       "sort": "Ordenar",
-      "search": "Buscar"
+      "search": "Buscar",
+      "scanCovers": "Reescanear juegos y carátulas",
+      "removeCover": "Eliminar foto"
     }
   }
 }

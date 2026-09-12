@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Previsualización de Carátulas Predeterminadas por Consola - Cascabel Launcher</title>
+  <link rel="stylesheet" href="./src/styles.css">
+  <style>
+    body {
+      background-color: #0f1015;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    .test-header {
+      max-width: 1280px;
+      margin: 0 auto 30px auto;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(30, 32, 44, 0.7) 0%, rgba(18, 19, 26, 0.9) 100%);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .test-header h1 {
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+    }
+
+    .test-header p {
+      margin: 0;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .test-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 32px;
+      max-width: 1320px;
+      margin: 0 auto 60px auto;
+      align-items: start;
+      justify-items: center;
+    }
+
+    .preview-card-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .preview-label {
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .preview-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #64748b;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="test-header">
+    <h1>🎮 Previsualización de Carátulas Predeterminadas</h1>
+    <p>Validación de la solapa vertical de 18px (3x más ancha) y centrado proporcional de los logotipos.</p>
+    <div class="test-controls">
+      <button class="filter-btn active" onclick="filterConsoles('all', this)">Todas (21)</button>
+      <button class="filter-btn" onclick="filterConsoles('nintendo', this)">Nintendo</button>
+      <button class="filter-btn" onclick="filterConsoles('playstation', this)">PlayStation</button>
+      <button class="filter-btn" onclick="filterConsoles('sega', this)">SEGA</button>
+      <button class="filter-btn" onclick="filterConsoles('xbox', this)">Xbox</button>
+      <button class="filter-btn" onclick="filterConsoles('horizontal', this)">Horizontales</button>
+      <button class="filter-btn" onclick="filterConsoles('vertical', this)">Verticales</button>
+    </div>
+  </div>
+
+  <div class="preview-grid" id="preview-container">
+    <!-- Generado dinámicamente -->
+  </div>
+
+  <script>
+    const consolesData = [
+      { id: 'nes', name: 'NES', brand: 'Nintendo', sub: 'Entertainment System', type: 'vertical', cat: 'nintendo', game: 'Super Mario Bros 3' },
+      { id: 'snes', name: 'Super Nintendo', brand: 'Super Nintendo', sub: 'Entertainment System', type: 'horizontal', cat: 'nintendo', game: 'Super Mario World' },
+      { id: 'n64', name: 'Nintendo 64', brand: 'Nintendo 64', sub: 'Official Seal of Quality', type: 'horizontal', cat: 'nintendo', game: 'Super Mario 64' },
+      { id: 'gamecube', name: 'GameCube', brand: 'Nintendo', sub: 'GameCube', type: 'vertical', cat: 'nintendo', game: 'Super Smash Bros. Melee' },
+      { id: 'wii', name: 'Wii', brand: 'Wii', sub: 'Nintendo', type: 'vertical', cat: 'nintendo', game: 'Super Mario Galaxy' },
+      { id: 'wiiu', name: 'Wii U', brand: 'Wii U', sub: 'Nintendo', type: 'vertical', cat: 'nintendo', game: 'Zelda Wind Waker HD' },
+      { id: 'switch', name: 'Switch', brand: 'Nintendo Switch', sub: '', type: 'vertical', cat: 'nintendo', game: 'Zelda Breath of the Wild' },
+      { id: 'gameboy', name: 'Game Boy', brand: 'Nintendo', sub: 'Game Boy', type: 'vertical', cat: 'nintendo', game: 'Pokemon Red & Blue' },
+      { id: 'gbc', name: 'Game Boy Color', brand: 'Game Boy', sub: 'Color', type: 'vertical', cat: 'nintendo', game: 'Zelda Links Awakening DX' },
+      { id: 'gba', name: 'Game Boy Advance', brand: 'Game Boy Advance', sub: 'Nintendo', type: 'horizontal', cat: 'nintendo', game: 'Metroid Fusion' },
+      { id: 'ds', name: 'Nintendo DS', brand: 'Nintendo DS', sub: '', type: 'vertical', cat: 'nintendo', game: 'Chrono Trigger DS' },
+      { id: '3ds', name: 'Nintendo 3DS', brand: 'Nintendo 3DS', sub: '', type: 'vertical', cat: 'nintendo', game: 'Zelda A Link Between Worlds' },
+      { id: 'ps1', name: 'PlayStation 1', brand: 'PlayStation', sub: 'Sony', type: 'vertical', cat: 'playstation', game: 'Final Fantasy VII' },
+      { id: 'ps2', name: 'PlayStation 2', brand: 'PlayStation 2', sub: 'Sony', type: 'vertical', cat: 'playstation', game: 'God of War II' },
+      { id: 'psp', name: 'PSP', brand: 'PSP', sub: 'PlayStation Portable', type: 'horizontal', cat: 'playstation', game: 'Crisis Core FF VII' },
+      { id: 'genesis', name: 'Sega Genesis', brand: 'SEGA', sub: 'Genesis', type: 'horizontal', cat: 'sega', game: 'Sonic The Hedgehog 2' },
+      { id: 'dreamcast', name: 'Dreamcast', brand: 'SEGA', sub: 'Dreamcast', type: 'vertical', cat: 'sega', game: 'Shenmue' },
+      { id: 'xbox', name: 'Xbox', brand: 'XBOX', sub: 'Microsoft', type: 'vertical', cat: 'xbox', game: 'Halo Combat Evolved' },
+      { id: 'xbox360', name: 'Xbox 360', brand: 'XBOX 360', sub: 'Microsoft', type: 'vertical', cat: 'xbox', game: 'Gears of War' },
+      { id: 'mame', name: 'MAME Arcade', brand: 'Arcade Classics', sub: 'MAME', type: 'vertical', cat: 'arcade', game: 'Street Fighter II' },
+      { id: 'otra', name: 'Cascabel', brand: 'Cascabel', sub: 'Collection', type: 'vertical', cat: 'other', game: 'Juego Personalizado' }
+    ];
+
+    const container = document.getElementById('preview-container');
+
+    function renderList(items) {
+      container.innerHTML = '';
+      items.forEach(c => {
+        const wrap = document.createElement('div');
+        wrap.className = 'preview-card-wrap';
+
+        const card = document.createElement('div');
+        card.className = `game-card cover-${c.type}`;
+
+        const cover = document.createElement('div');
+        cover.className = 'game-cover';
+
+        cover.innerHTML = `
+          <div class="default-console-box box-${c.id}">
+            <div class="box-badge-top">
+              <span class="box-brand-title">${c.brand}</span>
+              ${c.sub ? `<span class="box-sub-title">${c.sub}</span>` : ''}
+            </div>
+            <div class="box-center">
+              <img class="box-console-img" src="./assets/console-icons/${c.id}.png" alt="${c.name}" />
+            </div>
+            <div class="box-badge-bottom">
+              <span class="box-game-name">${c.game}</span>
+            </div>
+          </div>
+        `;
+
+        card.appendChild(cover);
+        wrap.appendChild(card);
+
+        const label = document.createElement('div');
+        label.className = 'preview-label';
+        label.textContent = c.name;
+        wrap.appendChild(label);
+
+        const tag = document.createElement('div');
+        tag.className = 'preview-tag';
+        const hasSpine = !['psp', 'genesis'].includes(c.id);
+        tag.textContent = `${c.type === 'horizontal' ? 'Horizontal (4:3)' : 'Vertical (3:4)'}${hasSpine ? ' · Solapa 18px' : ''}`;
+        wrap.appendChild(tag);
+
+        container.appendChild(wrap);
+      });
+    }
+
+    function filterConsoles(filter, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (filter === 'all') {
+        renderList(consolesData);
+      } else if (filter === 'horizontal' || filter === 'vertical') {
+        renderList(consolesData.filter(c => c.type === filter));
+      } else {
+        renderList(consolesData.filter(c => c.cat === filter));
+      }
+    }
+
+    // Inicializar
+    renderList(consolesData);
+  </script>
+</body>
+</html>

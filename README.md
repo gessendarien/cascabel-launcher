@@ -42,7 +42,7 @@ To install on Windows, you must compile the application yourself. Run the `build
 # Select option [2] Build for Windows (.exe)
 ```
 
-Current version: 1.1.1
+Current version: 1.2.0
 
 ## Usage
 

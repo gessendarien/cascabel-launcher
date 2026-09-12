@@ -54,9 +54,34 @@ check_dependencies() {
     exit 1
   fi
 
+  local needs_install=false
+
   if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}Installing dependencies...${NC}"
-    npm install
+    needs_install=true
+  elif ! npx electron -v &> /dev/null; then
+    needs_install=true
+  elif ! npx electron-builder --version &> /dev/null; then
+    needs_install=true
+  fi
+
+  if [ "$needs_install" = true ]; then
+    echo ""
+    echo -e "${YELLOW}Missing required dependencies to build (including Electron and electron-builder).${NC}"
+    read -rp "$(echo -e "${CYAN}Do you want to download and install them now? / ¿Deseas descargarlas e instalarlas ahora? [S/n]: ${NC}")" choice
+    case "$choice" in
+      [nN][oO]|[nN])
+        echo -e "${RED}Build cancelled. Missing required dependencies.${NC}"
+        exit 1
+        ;;
+      *)
+        echo -e "${YELLOW}Downloading and installing dependencies...${NC}"
+        npm install
+        if ! npx electron -v &> /dev/null; then
+          node node_modules/electron/install.js || true
+        fi
+        echo -e "${GREEN}✔ Dependencies installed successfully.${NC}"
+        ;;
+    esac
   fi
 }
 

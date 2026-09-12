@@ -66,13 +66,26 @@ body {
   max-width: calc(100% - 60px); /* Dejar espacio para el menú */
 }
 
+.tabs-container.align-left {
+  justify-content: flex-start;
+}
+
+.tabs-container.align-center {
+  justify-content: safe center;
+}
+
+.tabs-container.align-right {
+  justify-content: flex-end;
+}
+
 .tabs-container::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
 
 .tab {
-  padding: 10px 20px;
-  margin-right: 12px;
+  height: 42px;
+  padding: 0 20px;
+  margin-right: 10px;
   background: var(--tab-background-color);
   border: none;
   border-radius: 12px;
@@ -80,17 +93,37 @@ body {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   position: relative;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   user-select: none;
   flex-shrink: 0;
-  min-width: fit-content;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
 }
+
+.tab.tab-icon-only {
+  width: 52px;
+  min-width: 52px;
+  padding: 0;
+  justify-content: center;
+}
+
+.tab-console-icon {
+  height: 24px;
+  max-width: 44px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+
 
 .tab svg {
   width: 36px;
@@ -102,14 +135,17 @@ body {
 
 /* Estilos para drag and drop */
 .tab.dragging {
-  opacity: 0.5;
-  transform: rotate(5deg);
+  opacity: 0.8;
+  transform: scale(1.05);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.4);
   z-index: 1000;
+  cursor: grabbing !important;
 }
 
 .tab.drag-over {
-  padding-left: 24px;
-  background: rgba(74, 143, 255, 0.1);
+  transform: translateX(8px);
+  background: rgba(255, 255, 255, 0.15);
+  border-left: 3px solid #4a90e2;
 }
 
 .tab:hover {
@@ -150,7 +186,7 @@ body {
 
 /* Estilo para el contenido principal */
 #emulator-content {
-  padding: 20px;
+  padding: 20px 24px 140px 24px; /* Suficiente espacio inferior para que la última fila se vea perfecta */
   height: calc(100vh - 75px);
   overflow-y: auto;
 }
@@ -608,9 +644,25 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   column-gap: 20px;
-  row-gap: 8px;
+  row-gap: 36px; /* Aumentado de 8px a 36px para dar respiro entre filas */
+  padding-bottom: 60px; /* Margen inferior extra para última fila */
   align-items: start;
   justify-items: center;
+}
+
+@keyframes cardAppearOpacity {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.games-grid.fade-refresh .game-card {
+  animation: cardAppearOpacity 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .game-card {
@@ -650,7 +702,7 @@ button:hover {
 
 .game-cover {
   width: 100%;
-  border-radius: 12px;
+  border-radius: 0 !important;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -674,7 +726,7 @@ button:hover {
   font-size: 13px;
   background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
   border: 2px dashed #404040;
-  border-radius: 12px;
+  border-radius: 0 !important;
   box-sizing: border-box;
 }
 
@@ -923,4 +975,398 @@ button:hover {
 .theme-notification {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   font-weight: 500;
+}
+
+/* Badge flotante para escaneo y descarga de carátulas con Cascabel Covers */
+.cover-scraping-badge {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(30, 30, 30, 0.92);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: none;
+  align-items: center;
+  gap: 10px;
+  z-index: 3000;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.scraping-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: scraping-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes scraping-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Punto blanco latiendo para notificación de actualización */
+.update-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: auto;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.9);
+  animation: pulse-white-glow 1.6s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+@keyframes pulse-white-glow {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.9);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* ==========================================================================
+   Carátulas por defecto estilo caja física de cada consola
+   ========================================================================== */
+.default-console-box {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 0 !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.box-badge-top {
+  width: 100%;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.box-brand-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.box-sub-title {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+  text-transform: uppercase;
+}
+
+.box-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.box-console-img {
+  max-width: 78%;
+  max-height: 65%;
+  object-fit: contain;
+  margin: auto;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.35s ease;
+}
+
+.game-card:hover .box-console-img {
+  transform: scale(1.1) translateY(-4px);
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.85));
+}
+
+.box-badge-bottom {
+  width: 100%;
+  padding: 6px 8px;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(4px);
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 2;
+}
+
+.box-game-name {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* --- Temas por consola --- */
+/* NES: Solapa lateral roja izquierda (18px) */
+.box-nes {
+  background: radial-gradient(circle at center, #222222 0%, #111111 100%);
+  border-left: 18px solid #d82828;
+}
+.box-nes .box-badge-top {
+  background: #d82828;
+  color: #ffffff;
+}
+
+/* SNES: Solapa lateral roja derecha (18px) - color exacto idéntico */
+.box-snes {
+  background: radial-gradient(circle at center, #35383f 0%, #1e2024 100%);
+  border-right: 18px solid #b71c1c;
+}
+.box-snes .box-badge-top {
+  background: #b71c1c;
+  color: #ffffff;
+}
+
+/* N64: Solapa lateral roja derecha (18px) */
+.box-n64 {
+  background: radial-gradient(circle at center, #282830 0%, #151518 100%);
+  border-right: 18px solid #e52521;
+}
+.box-n64 .box-badge-top {
+  background: #e52521;
+  color: #ffffff;
+}
+
+/* GameCube: Solapa lateral morada izquierda (18px) */
+.box-gamecube {
+  background: radial-gradient(circle at center, #231f38 0%, #12101c 100%);
+  border-left: 18px solid #6650a5;
+}
+.box-gamecube .box-badge-top {
+  background: #6650a5;
+  color: #ffffff;
+}
+
+/* Wii: Solapa lateral azul Wii izquierda (18px) - color exacto idéntico */
+.box-wii {
+  background: radial-gradient(circle at center, #f4f6f8 0%, #d8dde3 100%);
+  border-left: 18px solid #0096d2;
+}
+.box-wii .box-badge-top {
+  background: #0096d2;
+  color: #ffffff;
+}
+.box-wii .box-badge-bottom {
+  background: rgba(30, 40, 50, 0.85);
+}
+
+/* Wii U: Solapa lateral cyan izquierda (18px) */
+.box-wiiu {
+  background: radial-gradient(circle at center, #1b2838 0%, #0d1722 100%);
+  border-left: 18px solid #009ac7;
+}
+.box-wiiu .box-badge-top {
+  background: #009ac7;
+  color: #ffffff;
+}
+
+/* Switch: Solapa lateral roja izquierda (18px) */
+.box-switch {
+  background: radial-gradient(circle at center, #222226 0%, #141416 100%);
+  border-left: 18px solid #e60012;
+}
+.box-switch .box-badge-top {
+  background: #e60012;
+  color: #ffffff;
+}
+
+/* Game Boy: Solapa lateral magenta izquierda (18px) */
+.box-gameboy {
+  background: radial-gradient(circle at center, #8b9590 0%, #68726d 100%);
+  border-left: 18px solid #891652;
+}
+.box-gameboy .box-badge-top {
+  background: #891652;
+  color: #ffffff;
+}
+
+/* Game Boy Color: Solapa lateral gris clásica (18px) - tono gris sólido a juego */
+.box-gbc {
+  background: radial-gradient(circle at center, #2b2b35 0%, #16161b 100%);
+  border-left: 18px solid #585d66;
+}
+.box-gbc .box-badge-top {
+  background: #585d66;
+  color: #ffffff;
+}
+
+/* GBA: Solapa lateral morada izquierda (18px) */
+.box-gba {
+  background: radial-gradient(circle at center, #292a3d 0%, #171722 100%);
+  border-left: 18px solid #4a3e94;
+}
+.box-gba .box-badge-top {
+  background: #4a3e94;
+  color: #ffffff;
+}
+
+/* DS: Solapa lateral plateada/gris oscura izquierda (18px) - color exacto idéntico */
+.box-ds {
+  background: radial-gradient(circle at center, #2c2d30 0%, #17181a 100%);
+  border-left: 18px solid #484b52;
+}
+.box-ds .box-badge-top {
+  background: #484b52;
+  color: #ffffff;
+}
+
+/* 3DS: Solapa lateral derecha (18px) */
+.box-3ds {
+  background: radial-gradient(circle at center, #f5f5f7 0%, #dcdde1 100%);
+  border-right: 18px solid #d32f2f;
+}
+.box-3ds .box-badge-top {
+  background: #d32f2f;
+  color: #ffffff;
+}
+.box-3ds .box-badge-bottom {
+  background: rgba(30, 30, 35, 0.85);
+}
+
+/* PS1 */
+.box-ps1 {
+  background: radial-gradient(circle at center, #2c2f36 0%, #17181c 100%);
+  border-left: 18px solid #003791;
+}
+.box-ps1 .box-badge-top {
+  background: #111111;
+  color: #ffffff;
+  border-bottom: 2px solid #003791;
+}
+
+/* PS2: Solapa lateral azul PlayStation izquierda (18px) */
+.box-ps2 {
+  background: radial-gradient(circle at center, #101c38 0%, #070d1a 100%);
+  border-left: 18px solid #003791;
+}
+.box-ps2 .box-badge-top {
+  background: #003791;
+  color: #ffffff;
+}
+
+/* PSP */
+.box-psp {
+  background: radial-gradient(circle at center, #25262a 0%, #131417 100%);
+}
+.box-psp .box-badge-top {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+.box-psp .box-badge-bottom {
+  background: rgba(20, 20, 20, 0.85);
+}
+
+/* Genesis / Mega Drive */
+.box-genesis {
+  background: radial-gradient(circle at center, #262729 0%, #111213 100%);
+  border-top: 5px solid #e52521;
+}
+.box-genesis .box-badge-top {
+  background: #c62828;
+  color: #ffffff;
+}
+
+/* Dreamcast: Solapa lateral naranja izquierda (18px) */
+.box-dreamcast {
+  background: radial-gradient(circle at center, #f5f5f7 0%, #d9dade 100%);
+  border-left: 18px solid #ff6600;
+}
+.box-dreamcast .box-badge-top {
+  background: #ff6600;
+  color: #ffffff;
+}
+.box-dreamcast .box-badge-bottom {
+  background: rgba(25, 25, 30, 0.85);
+}
+
+/* Xbox: Solapa lateral verde izquierda (18px) */
+.box-xbox {
+  background: radial-gradient(circle at center, #132415 0%, #09120a 100%);
+  border-left: 18px solid #52b022;
+}
+.box-xbox .box-badge-top {
+  background: #52b022;
+  color: #ffffff;
+}
+
+/* Xbox 360: Solapa lateral verde izquierda (18px) - color exacto idéntico */
+.box-xbox360 {
+  background: radial-gradient(circle at center, #f5f5f7 0%, #d8dcd8 100%);
+  border-left: 18px solid #7cb342;
+}
+.box-xbox360 .box-badge-top {
+  background: #7cb342;
+  color: #ffffff;
+}
+.box-xbox360 .box-badge-bottom {
+  background: rgba(20, 30, 20, 0.85);
+}
+
+/* MAME: Solapa lateral magenta/arcade izquierda (18px) - color exacto idéntico */
+.box-mame {
+  background: radial-gradient(circle at center, #2b1d3a 0%, #12091c 100%);
+  border-left: 18px solid #e91e63;
+}
+.box-mame .box-badge-top {
+  background: #e91e63;
+  color: #ffffff;
+}
+
+/* Otra / Default: Solapa lateral azul grisáceo izquierda (18px) */
+.box-otra {
+  background: radial-gradient(circle at center, #252830 0%, #121316 100%);
+  border-left: 18px solid #4a6fa5;
+}
+.box-otra .box-badge-top {
+  background: #4a6fa5;
+  color: #ffffff;
 }
