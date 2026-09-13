@@ -78,7 +78,7 @@ function globalUpdateProfileImage() {
   // 1. Imagen en navbar
   const profileImage = document.querySelector('.profile-image-navbar');
   if (profileImage) {
-    profileImage.src = hasCustomPhoto ? config.theme.profileImage : '../assets/cascabel.png';
+    profileImage.src = hasCustomPhoto ? config.theme.profileImage : '../assets/default-profile.png';
   }
 
   // 2. Modal de configuración (vista previa y clases)
@@ -96,7 +96,7 @@ function globalUpdateProfileImage() {
       if (profileWrapper) profileWrapper.classList.add('has-custom-image');
       if (profileRemoveHover) profileRemoveHover.style.display = 'block';
     } else {
-      profilePreview.style.backgroundImage = 'url(../assets/cascabel.png)';
+      profilePreview.style.backgroundImage = 'url(../assets/default-profile.png)';
       if (profileContainer) profileContainer.classList.remove('has-custom-image');
       if (profileCard) profileCard.classList.remove('has-custom-image');
       if (profileWrapper) profileWrapper.classList.remove('has-custom-image');
@@ -592,13 +592,22 @@ async function loadGames(emulator) {
     for (const game of games) {
       try {
         let coverPath = null;
+        let isLocalCover = false;
         if (localCoversMap.size > 0) {
           const normGame = game.name.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '').trim();
           coverPath = localCoversMap.get(normGame) || localCoversMap.get(game.name.toLowerCase().trim()) || null;
+          if (coverPath) {
+            isLocalCover = true;
+          }
         }
         if (!coverPath) {
           coverPath = coverScraper.getCachedCover(game.path, game.filename, emulator);
+          if (coverPath) {
+            isLocalCover = false;
+          }
         }
+        game.isLocalCover = isLocalCover;
+        game.coverPath = coverPath;
         if (coverPath) {
           try {
             const imageBuffer = fs.readFileSync(coverPath);
@@ -708,12 +717,26 @@ function startBackgroundCoverScraping(games, emulator) {
     (game, dataUrl, coverPath) => {
       // Actualizar en el objeto de juego en memoria
       game.coverUrl = dataUrl;
+      game.coverPath = coverPath;
+      game.isLocalCover = false;
+      game.coverRemoved = false;
 
       // Actualizar tarjeta en el DOM usando data-path
-      let card = document.querySelector(`.game-card[data-path="${CSS.escape(game.path)}"]`);
+      let card = null;
+      for (const c of document.querySelectorAll('.game-card')) {
+        if (c.getAttribute('data-path') === game.path) {
+          card = c;
+          break;
+        }
+      }
       if (!card) {
         for (const [_, grid] of emulatorDOMCache.entries()) {
-          card = grid.querySelector(`.game-card[data-path="${CSS.escape(game.path)}"]`);
+          for (const c of grid.querySelectorAll('.game-card')) {
+            if (c.getAttribute('data-path') === game.path) {
+              card = c;
+              break;
+            }
+          }
           if (card) break;
         }
       }
@@ -1016,7 +1039,7 @@ function renderTabs() {
   if (config.theme && config.theme.profileImage) {
     profileImage.src = config.theme.profileImage;
   } else {
-    profileImage.src = '../assets/cascabel.png';
+    profileImage.src = '../assets/default-profile.png';
   }
   
   menuButton.appendChild(profileImage);
@@ -1139,6 +1162,29 @@ function renderTabs() {
 
   // Aplicar colores
   setTimeout(() => applyTabColors(), 100);
+
+  // En segundo plano, pre-cargar y encolar carátulas para el resto de consolas
+  setTimeout(async () => {
+    if (!config.emulators || config.emulators.length <= 1) return;
+    for (let i = 0; i < config.emulators.length; i++) {
+      if (i === currentTabIndex) continue;
+      const otherEmu = config.emulators[i];
+      if (!otherEmu || !otherEmu.gamesPath) continue;
+      if (!emulatorGamesCache.has(i)) {
+        try {
+          const games = await loadGames(otherEmu);
+          emulatorGamesCache.set(i, games);
+          if (!emulatorDOMCache.has(i) && games.length > 0) {
+            const tempContainer = document.createElement('div');
+            renderGamesToContainer(games, otherEmu, tempContainer, false, i);
+          }
+          startBackgroundCoverScraping(games, otherEmu);
+        } catch (e) {
+          console.error(`Error pre-cargando juegos de ${otherEmu.name}:`, e);
+        }
+      }
+    }
+  }, 1500);
 }
 
 // Seleccionar una pestaña o consola
@@ -1163,12 +1209,6 @@ function selectTab(idx) {
   // Aplicar colores a las pestañas y componentes
   applyTabColors();
 
-  // Cancelar escaneo anterior si cambiamos de pestaña
-  coverScraper.cancelActiveScan();
-  const existingBadge = document.getElementById('cover-scraping-badge');
-  if (existingBadge) {
-    existingBadge.style.display = 'none';
-  }
   const main = document.getElementById('emulator-content');
   if (!main) return;
   
@@ -1176,6 +1216,10 @@ function selectTab(idx) {
   if (emulatorDOMCache.has(idx)) {
     main.innerHTML = '';
     main.appendChild(emulatorDOMCache.get(idx));
+    const cachedGames = emulatorGamesCache.get(idx);
+    if (cachedGames && cachedGames.length > 0) {
+      startBackgroundCoverScraping(cachedGames, emu);
+    }
     return;
   }
 
@@ -1187,10 +1231,7 @@ function selectTab(idx) {
       return;
     }
     const gamesToShow = renderGamesToContainer(cachedGames, emu, main, false, idx);
-    if (!emulatorScrapedSet.has(idx)) {
-      emulatorScrapedSet.add(idx);
-      startBackgroundCoverScraping(gamesToShow, emu);
-    }
+    startBackgroundCoverScraping(gamesToShow, emu);
     return;
   }
 
@@ -1213,11 +1254,8 @@ function selectTab(idx) {
     // Renderizar la cuadrícula de juegos (se almacena automáticamente en emulatorDOMCache)
     const gamesToShow = renderGamesToContainer(games, emu, main, false, idx);
 
-    // Iniciar escaneo automático en segundo plano con Cascabel Covers (solo 1 vez por sesión)
-    if (!emulatorScrapedSet.has(idx)) {
-      emulatorScrapedSet.add(idx);
-      startBackgroundCoverScraping(gamesToShow, emu);
-    }
+    // Iniciar o priorizar escaneo en segundo plano para esta consola
+    startBackgroundCoverScraping(gamesToShow, emu);
   }).catch(error => {
     main.innerHTML = `
       <div class="error-message">
@@ -1350,6 +1388,11 @@ function renderGamesToContainer(games, emu, container, animate = false, tabIdx =
 function showGameContextMenu(event, game, emu, gameCard) {
   closeContextMenu();
 
+  // Se puede eliminar solamente el cover scrappeado; si es de la carpeta local no aparece esta opción
+  if (!game.coverUrl || game.isLocalCover) {
+    return;
+  }
+
   const menu = document.createElement('div');
   menu.className = 'context-menu';
   menu.style.left = `${event.clientX}px`;
@@ -1357,12 +1400,12 @@ function showGameContextMenu(event, game, emu, gameCard) {
 
   const deleteOption = document.createElement('div');
   deleteOption.className = 'context-menu-item';
-  deleteOption.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px; vertical-align: middle;">delete</span>${t('ui.contextMenu.removeCover') || 'Eliminar foto'}`;
+  deleteOption.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px; vertical-align: middle;">delete</span>${t('ui.contextMenu.removeCover') || 'Eliminar carátula'}`;
 
   deleteOption.addEventListener('click', (e) => {
     e.stopPropagation();
     closeContextMenu();
-    removeGameCover(game, emu, gameCard);
+    showConfirmRemoveCoverModal(game, emu, gameCard);
   });
 
   menu.appendChild(deleteOption);
@@ -1381,6 +1424,48 @@ function showGameContextMenu(event, game, emu, gameCard) {
   setTimeout(() => {
     window.addEventListener('click', closeContextMenu, { once: true });
   }, 0);
+}
+
+// Modal personalizado no-vanilla con colores del tema para confirmar eliminación de carátula
+function showConfirmRemoveCoverModal(game, emu, gameCard) {
+  const confirmModal = document.createElement('div');
+  confirmModal.className = 'confirm-modal';
+  confirmModal.style.zIndex = '12000';
+  
+  const title = t('ui.contextMenu.confirmRemoveCoverTitle') || '¿Eliminar carátula?';
+  const msgTemplate = t('ui.contextMenu.confirmRemoveCoverMessage') || '¿Deseas eliminar la carátula descargada para "{game}"? Se mostrará la imagen predeterminada de la consola.';
+  const message = msgTemplate.replace('{game}', game.name);
+
+  confirmModal.innerHTML = `
+    <div class="confirm-content" style="background: var(--main-background-color, #222); border: 2px solid var(--header-color, #db2424); color: var(--tab-text-color, #ffffff); border-radius: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.6); max-width: 420px;">
+      <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0; color: var(--header-color, #ff6b6b);">
+        <span class="material-symbols-outlined" style="font-size: 22px;">delete</span>
+        ${title}
+      </h3>
+      <p style="margin: 14px 0 20px 0; font-size: 14px; line-height: 1.5; color: var(--tab-text-color, #eee);">${message}</p>
+      <div class="confirm-buttons" style="display: flex; justify-content: center; gap: 12px;">
+        <button id="cancel-remove-cover-btn" class="btn btn-secondary">${t('ui.buttons.cancel') || 'Cancelar'}</button>
+        <button id="confirm-remove-cover-btn" class="btn btn-danger">${t('ui.buttons.delete') || 'Eliminar'}</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(confirmModal);
+
+  document.getElementById('cancel-remove-cover-btn')?.addEventListener('click', () => {
+    confirmModal.remove();
+  });
+
+  document.getElementById('confirm-remove-cover-btn')?.addEventListener('click', () => {
+    confirmModal.remove();
+    removeGameCover(game, emu, gameCard);
+  });
+
+  confirmModal.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      confirmModal.remove();
+    }
+  });
 }
 
 // Elimina la carátula de un juego y vuelve a la carátula predeterminada de la consola
@@ -1870,8 +1955,8 @@ function showSettings(emulatorToEdit = null, editIndex = -1) {
       <label for="emu-exec">${t('ui.forms.executablePath')}</label>
       <div class="file-input-group">
         <input id="emu-exec" type="text" value="${isEditing ? emulatorToEdit.execPath : ''}" placeholder="${t('ui.forms.execPlaceholder') || 'Ruta a archivo o comando del sistema'}">
-        <button id="select-exec-btn" class="btn" type="button" title="${t('ui.forms.file')}">${t('ui.forms.file')}</button>
-        <button id="select-sysapp-btn" class="btn btn-secondary" type="button" title="${t('ui.forms.systemApp')}">${t('ui.forms.systemApp')}</button>
+        <button id="select-exec-btn" class="btn" type="button" title="${t('ui.forms.fileTooltip') || 'Archivo ejecutable de la consola que no necesariamente está instalado en el sistema'}">${t('ui.forms.file')}</button>
+        <button id="select-sysapp-btn" class="btn btn-secondary" type="button" title="${t('ui.forms.systemAppTooltip') || 'Programa instalado en el sistema que aparece en tu lista de programas'}">${t('ui.forms.systemApp')}</button>
       </div>
     </div>
     <div class="form-group">
@@ -1891,6 +1976,7 @@ function showSettings(emulatorToEdit = null, editIndex = -1) {
     </div>
     <div class="form-buttons">
       ${isEditing ? `<button id="delete-emu-btn" class="btn btn-danger">${t('ui.buttons.delete')}</button>` : ''}
+      ${isEditing ? `<button id="scan-covers-btn" class="btn btn-secondary" type="button"><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">image_search</span>${t('ui.buttons.scanCovers') || 'Escanear carátulas'}</button>` : ''}
       <button id="save-emu-btn" class="btn btn-primary">${isEditing ? t('ui.buttons.save') : t('ui.buttons.add')}</button>
       <button id="cancel-emu-btn" class="btn">${t('ui.buttons.cancel')}</button>
     </div>
@@ -1967,6 +2053,28 @@ function showSettings(emulatorToEdit = null, editIndex = -1) {
       if (deleted) {
         modal.classList.add('hidden');
       }
+    });
+
+    // Listener para escanear carátulas (a la derecha de Eliminar)
+    document.getElementById('scan-covers-btn')?.addEventListener('click', async function() {
+      const name = document.getElementById('emu-name').value;
+      const icon = document.getElementById('emu-icon').value;
+      const execPath = document.getElementById('emu-exec').value;
+      const gamesPath = document.getElementById('emu-games').value;
+      const coversPath = document.getElementById('emu-covers').value;
+
+      if (editIndex >= 0) {
+        config.emulators[editIndex] = { name, icon, execPath, gamesPath, coversPath };
+        await saveConfig();
+      }
+
+      modal.classList.add('hidden');
+
+      // Limpiar marcas 'removed' para permitir que las carátulas eliminadas se vuelvan a scrappear
+      coverScraper.clearRemovedStatusForEmulator(config.emulators[editIndex]);
+
+      showTopNotification(t('ui.contextMenu.scanCovers') || 'Escanear carátulas...', 'success');
+      await refreshEmulatorGames(editIndex);
     });
   }
 }

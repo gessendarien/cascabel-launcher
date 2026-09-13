@@ -6,15 +6,28 @@ const http = require('http');
 const { URL } = require('url');
 
 // ---------------------------------------------------------------------------
-// Rutas de almacenamiento y caché compartidas con cascabel-covers
+// Rutas de almacenamiento y caché independientes de Cascabel Launcher
 // ---------------------------------------------------------------------------
-const BASE_DIR = path.join(os.homedir(), '.cascabel-covers');
-const COVERS_DIR = path.join(BASE_DIR, 'covers');
+function getLauncherDataDir() {
+  const appName = 'cascabel-launcher';
+  if (process.platform === 'win32') {
+    return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), appName);
+  } else if (process.platform === 'darwin') {
+    return path.join(os.homedir(), 'Library', 'Application Support', appName);
+  } else {
+    // Linux / Unix: XDG_CONFIG_HOME o ~/.config
+    const configHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
+    return path.join(configHome, appName);
+  }
+}
+
+const BASE_DIR = path.join(getLauncherDataDir(), 'covers-cache');
+const COVERS_DIR = path.join(BASE_DIR, 'images');
 const REGISTRY_PATH = path.join(BASE_DIR, 'registry.json');
 
 const RAW_BASE = 'https://raw.githubusercontent.com/libretro-thumbnails/{repo}/master/Named_Boxarts/';
 const API_TREE = 'https://api.github.com/repos/libretro-thumbnails/{repo}/git/trees/master?recursive=1';
-const UA_HEADERS = { 'User-Agent': 'cascabel-covers' };
+const UA_HEADERS = { 'User-Agent': 'Cascabel-Launcher' };
 
 // ---------------------------------------------------------------------------
 // Mapeo de consolas/íconos a repositorios de libretro-thumbnails
@@ -166,7 +179,7 @@ function fetchUrl(targetUrl, headers = UA_HEADERS, maxRedirects = 5) {
       res.on('end', () => resolve(Buffer.concat(chunks)));
     });
     req.on('error', reject);
-    req.setTimeout(30000, () => {
+    req.setTimeout(12000, () => {
       req.destroy();
       reject(new Error('Timeout al consultar ' + targetUrl));
     });
@@ -309,6 +322,13 @@ function findBestMatch(romTitle, titles) {
     } else if (romNorm.includes(tNorm)) {
       baseScore = 0.85 + 0.15 * (tNorm.length / romNorm.length);
     } else {
+      const len1 = romNorm.length;
+      const len2 = tNorm.length;
+      const minLen = len1 < len2 ? len1 : len2;
+      const maxLen = len1 > len2 ? len1 : len2;
+      if (maxLen > 0 && minLen / maxLen < 0.48) {
+        continue;
+      }
       baseScore = similarityRatio(romNorm, tNorm);
     }
 
@@ -489,6 +509,9 @@ async function scrapeGameCover(game, emulator) {
         bestMatch = match.title;
         bestScore = match.score;
         bestRepo = repo;
+        if (bestScore >= 0.88) {
+          break;
+        }
       }
     } catch (e) {
       console.warn(`No se pudo consultar índice de ${repo}:`, e.message);
@@ -505,19 +528,6 @@ async function scrapeGameCover(game, emulator) {
       const registry = loadRegistry();
       registry[game.path] = coverPath;
       saveRegistry(registry);
-
-      // Guardar copia en la carpeta de carátulas del emulador si está configurada
-      if (emulator && emulator.coversPath && fs.existsSync(emulator.coversPath)) {
-        try {
-          const ext = path.extname(coverPath) || '.png';
-          const targetInCoversDir = path.join(emulator.coversPath, `${romBaseName}${ext}`);
-          if (!fs.existsSync(targetInCoversDir)) {
-            fs.copyFileSync(coverPath, targetInCoversDir);
-          }
-        } catch (copyErr) {
-          console.warn('No se pudo copiar carátula a la carpeta del emulador:', copyErr.message);
-        }
-      }
 
       return coverPath;
     }
@@ -542,23 +552,22 @@ function fileToDataUrl(filePath) {
   }
 }
 
-// Control de cancelación de escaneo activo
-let activeScanToken = null;
+// ---------------------------------------------------------------------------
+// Cola global de escaneo en segundo plano (no se cancela al cambiar de pestaña)
+// ---------------------------------------------------------------------------
+const scrapeQueue = [];
+let isProcessingQueue = false;
+let activeScanToken = { cancelled: false };
 
 function cancelActiveScan() {
   if (activeScanToken) {
     activeScanToken.cancelled = true;
   }
+  scrapeQueue.length = 0;
 }
 
-// ---------------------------------------------------------------------------
 // Escaneo en segundo plano para una lista de juegos
-// ---------------------------------------------------------------------------
 async function scrapeCoversForGames(games, emulator, onCoverFound, onProgress, onComplete) {
-  cancelActiveScan();
-  const token = { cancelled: false };
-  activeScanToken = token;
-
   const registry = loadRegistry();
   const missingGames = games.filter(g => !g.coverUrl && !g.coverRemoved && registry[g.path] !== 'removed');
   if (missingGames.length === 0) {
@@ -566,73 +575,126 @@ async function scrapeCoversForGames(games, emulator, onCoverFound, onProgress, o
     return;
   }
 
-  let foundCount = 0;
-  let processed = 0;
-  const total = missingGames.length;
+  // Reactivar token si estaba cancelado
+  if (activeScanToken.cancelled) {
+    activeScanToken = { cancelled: false };
+  }
+  const token = activeScanToken;
 
+  // Evitar duplicar juegos en la cola
+  const queuedPaths = new Set(scrapeQueue.map(item => item.game.path));
+  const newItems = [];
   for (const game of missingGames) {
-    if (token.cancelled) break;
-
-    processed++;
-    if (onProgress) {
-      onProgress({ processed, total, currentGame: game.name });
-    }
-
-    try {
-      const coverPath = await scrapeGameCover(game, emulator);
-      if (token.cancelled) break;
-
-      if (coverPath) {
-        foundCount++;
-        const dataUrl = fileToDataUrl(coverPath);
-        if (dataUrl) {
-          game.coverUrl = dataUrl;
-          if (onCoverFound) {
-            onCoverFound(game, dataUrl, coverPath);
-          }
-        }
-      }
-    } catch (err) {
-      console.error(`Error procesando carátula para ${game.name}:`, err);
+    if (!queuedPaths.has(game.path)) {
+      newItems.push({
+        game,
+        emulator,
+        onCoverFound,
+        onProgress,
+        onComplete
+      });
+      queuedPaths.add(game.path);
     }
   }
 
-  if (!token.cancelled && onComplete) {
-    onComplete({ total, found: foundCount });
+  // Priorizar al inicio de la cola los juegos de la pestaña o consola recién seleccionada
+  scrapeQueue.unshift(...newItems);
+
+  if (isProcessingQueue) {
+    return;
+  }
+
+  isProcessingQueue = true;
+  let totalProcessed = 0;
+  let foundCount = 0;
+
+  try {
+    while (scrapeQueue.length > 0) {
+      if (token.cancelled) {
+        scrapeQueue.length = 0;
+        break;
+      }
+
+      const item = scrapeQueue.shift();
+      const currentRegistry = loadRegistry();
+
+      // Si el usuario eliminó la carátula mientras estaba en cola o ya tiene imagen
+      if (currentRegistry[item.game.path] === 'removed' || item.game.coverUrl) {
+        continue;
+      }
+
+      totalProcessed++;
+      const currentTotal = totalProcessed + scrapeQueue.length;
+
+      if (item.onProgress) {
+        item.onProgress({ processed: totalProcessed, total: currentTotal, currentGame: item.game.name });
+      }
+
+      try {
+        const coverPath = await scrapeGameCover(item.game, item.emulator);
+        if (token.cancelled) break;
+
+        if (coverPath) {
+          foundCount++;
+          const dataUrl = fileToDataUrl(coverPath);
+          if (dataUrl) {
+            item.game.coverUrl = dataUrl;
+            if (item.onCoverFound) {
+              item.onCoverFound(item.game, dataUrl, coverPath);
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`Error procesando carátula para ${item.game.name}:`, err);
+      }
+
+      // Ceder el control al event loop para que Chromium dibuje y refresque repaints suavemente
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+  } finally {
+    isProcessingQueue = false;
+    if (!token.cancelled && onComplete) {
+      onComplete({ total: totalProcessed, found: foundCount });
+    }
   }
 }
 
 // ---------------------------------------------------------------------------
-// Eliminar carátula (de caché, registro y carpeta del emulador)
+// Desvincular carátula en el launcher
+// Solo marca como 'removed' en el registro interno de Cascabel Launcher.
+// NUNCA elimina archivos del sistema ni afecta miniaturas (thumbnails)
+// asociadas al archivo del juego por el sistema operativo u otros programas.
 // ---------------------------------------------------------------------------
 function removeCover(romFullPath, emulator, gameName) {
   try {
     const registry = loadRegistry();
-    const oldPath = registry[romFullPath];
-    if (oldPath && typeof oldPath === 'string' && fs.existsSync(oldPath)) {
-      try {
-        fs.unlinkSync(oldPath);
-      } catch (e) {}
-    }
     registry[romFullPath] = 'removed';
     saveRegistry(registry);
+  } catch (err) {
+    console.error('Error desvinculando portada en launcher:', err);
+  }
+}
 
-    // Si tiene carpeta de covers local configurada, eliminar cualquier carátula coincidente
-    if (emulator && emulator.coversPath && fs.existsSync(emulator.coversPath)) {
-      const romBase = path.basename(romFullPath, path.extname(romFullPath)).toLowerCase();
-      const nameBase = gameName ? gameName.toLowerCase().trim() : '';
-      const files = fs.readdirSync(emulator.coversPath);
-      for (const f of files) {
-        const fBase = path.basename(f, path.extname(f)).toLowerCase();
-        if (fBase === romBase || (nameBase && fBase === nameBase)) {
-          try {
-            fs.unlinkSync(path.join(emulator.coversPath, f));
-          } catch (e) {}
+// ---------------------------------------------------------------------------
+// Limpiar estado 'removed' para permitir re-scrapping de carátulas de un emulador
+// ---------------------------------------------------------------------------
+function clearRemovedStatusForEmulator(emulator) {
+  try {
+    const registry = loadRegistry();
+    let modified = false;
+    for (const [romPath, status] of Object.entries(registry)) {
+      if (status === 'removed') {
+        if (!emulator || !emulator.gamesPath || romPath.startsWith(emulator.gamesPath)) {
+          delete registry[romPath];
+          modified = true;
         }
       }
     }
+    if (modified) {
+      saveRegistry(registry);
+    }
   } catch (err) {
-    console.error('Error eliminando portada:', err);
+    console.error('Error limpiando estado de carátulas eliminadas:', err);
   }
 }
 
@@ -656,5 +718,6 @@ module.exports = {
   fileToDataUrl,
   scrapeCoversForGames,
   cancelActiveScan,
-  removeCover
+  removeCover,
+  clearRemovedStatusForEmulator
 };

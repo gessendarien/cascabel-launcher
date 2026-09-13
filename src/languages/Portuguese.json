@@ -19,7 +19,8 @@
       "stop": "⏹ Parar",
       "retry": "Tentar novamente",
       "confirm": "Confirmar",
-      "selectOtherFolder": "Selecionar outra pasta"
+      "selectOtherFolder": "Selecionar outra pasta",
+      "scanCovers": "Escanear capas"
     },
     "menu": {
       "configuration": "Configuração",
@@ -43,9 +44,11 @@
       "executablePath": "Caminho do executável",
       "gamesPath": "Caminho dos jogos",
       "coversPath": "Pasta de capas",
-      "coverNote": "As capas não encontradas podem ser colocadas automaticamente ou manualmente nesta pasta com o mesmo nome do jogo.",
+      "coverNote": "As capas podem ser colocadas manualmente nesta pasta com o mesmo nome do jogo. Se a capa não for encontrada, o sistema baixará uma com base no nome do arquivo.",
       "file": "Executável",
       "systemApp": "Instalado",
+      "fileTooltip": "Arquivo executável da consola que não está necessariamente instalado no sistema.",
+      "systemAppTooltip": "Programa instalado no sistema que aparece na sua lista de programas.",
       "selectSystemAppTitle": "Aplicativos do sistema",
       "searchAppsPlaceholder": "Pesquisar aplicativo ou emulador...",
       "filterGamesEmulators": "Jogos e Emuladores",
@@ -109,7 +112,7 @@
       "backupConfig": "Criar backup",
       "exportConfig": "Exportar configuração",
       "importConfig": "Importar configuração",
-      "configNote": "Sua configuração (consoles, temas, caminhos) é automaticamente preservada durante as atualizações. Backups são criados automaticamente antes de importar configurações.",
+      "configNote": "Sua configuração (consoles, temas, caminhos) é automaticamente preservada durante as atualizações. Backups são criados automaticamente antes de importar configurações. Você pode salvar sua configuração se formatar seu computador ou quiser repetir a configuração em outro computador.",
       "checkForUpdates": "Verificar atualizações",
       "checkingUpdates": "Verificando atualizações...",
       "newVersionAvailable": "Há uma nova versão disponível:",
@@ -203,7 +206,9 @@
       "sort": "Ordenar",
       "search": "Pesquisar",
       "scanCovers": "Reescanear jogos e capas",
-      "removeCover": "Eliminar foto"
+      "removeCover": "Eliminar capa",
+      "confirmRemoveCoverTitle": "Eliminar capa?",
+      "confirmRemoveCoverMessage": "Deseja eliminar a capa baixada de '{game}'? A imagem padrão da consola será mostrada."
     }
   }
 }

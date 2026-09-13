@@ -19,7 +19,8 @@
       "stop": "⏹ Stoppen",
       "retry": "Erneut versuchen",
       "confirm": "Bestätigen",
-      "selectOtherFolder": "Anderen Ordner auswählen"
+      "selectOtherFolder": "Anderen Ordner auswählen",
+      "scanCovers": "Cover scannen"
     },
     "menu": {
       "configuration": "Konfiguration",
@@ -43,9 +44,11 @@
       "executablePath": "Pfad zur ausführbaren Datei",
       "gamesPath": "Spiele-Pfad",
       "coversPath": "Cover-Ordner",
-      "coverNote": "Nicht gefundene Cover können automatisch oder manuell in diesem Ordner mit dem gleichen Namen wie das Spiel abgelegt werden.",
+      "coverNote": "Cover können manuell in diesem Ordner mit dem gleichen Namen wie das Spiel abgelegt werden. Wenn das Cover nicht gefunden wird, lädt das System eines basierend auf dem Dateinamen herunter.",
       "file": "Ausführbar",
       "systemApp": "Installiert",
+      "fileTooltip": "Ausführbare Datei der Konsole, die nicht unbedingt im System installiert ist.",
+      "systemAppTooltip": "Im System installiertes Programm, das in Ihrer Programmliste erscheint.",
       "selectSystemAppTitle": "Systemanwendungen",
       "searchAppsPlaceholder": "Anwendung oder Emulator suchen...",
       "filterGamesEmulators": "Spiele & Emulatoren",
@@ -109,7 +112,7 @@
       "backupConfig": "Sicherung erstellen",
       "exportConfig": "Konfiguration exportieren",
       "importConfig": "Konfiguration importieren",
-      "configNote": "Ihre Konfiguration (Konsolen, Themes, Pfade) wird bei Aktualisierungen automatisch beibehalten. Sicherungen werden automatisch vor dem Import von Konfigurationen erstellt.",
+      "configNote": "Ihre Konfiguration (Konsolen, Themes, Pfade) wird bei Aktualisierungen automatisch beibehalten. Sicherungen werden automatisch vor dem Import von Konfigurationen erstellt. Sie können Ihre Konfiguration speichern, wenn Sie Ihren Computer formatieren oder die Einrichtung auf einem anderen Gerät wiederholen möchten.",
       "checkForUpdates": "Nach Updates suchen",
       "checkingUpdates": "Suche nach Updates...",
       "newVersionAvailable": "Eine neue Version ist verfügbar:",
@@ -203,7 +206,9 @@
       "sort": "Sortieren",
       "search": "Suchen",
       "scanCovers": "Spiele und Cover neu scannen",
-      "removeCover": "Foto entfernen"
+      "removeCover": "Cover entfernen",
+      "confirmRemoveCoverTitle": "Cover entfernen?",
+      "confirmRemoveCoverMessage": "Möchten Sie das heruntergeladene Cover für '{game}' entfernen? Das Standard-Konsolenbild wird angezeigt."
     }
   }
 }

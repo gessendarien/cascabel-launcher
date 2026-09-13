@@ -19,7 +19,8 @@
       "stop": "⏹ Stop",
       "retry": "Retry",
       "confirm": "Confirm",
-      "selectOtherFolder": "Select another folder"
+      "selectOtherFolder": "Select another folder",
+      "scanCovers": "Scan covers"
     },
     "menu": {
       "configuration": "Configuration",
@@ -43,9 +44,11 @@
       "executablePath": "Executable path",
       "gamesPath": "Games path",
       "coversPath": "Covers folder",
-      "coverNote": "Covers not found can be placed automatically or manually in this folder with the same name as the game.",
+      "coverNote": "Covers can be placed manually in this folder with the same name as the game. If the cover is not found, the system will download one based on the file name.",
       "file": "Executable",
       "systemApp": "Installed",
+      "fileTooltip": "Console executable file that is not necessarily installed on the system.",
+      "systemAppTooltip": "Program installed on the system that appears in your programs list.",
       "selectSystemAppTitle": "System Applications",
       "searchAppsPlaceholder": "Search application or emulator...",
       "filterGamesEmulators": "Games & Emulators",
@@ -109,7 +112,7 @@
       "backupConfig": "Create backup",
       "exportConfig": "Export config",
       "importConfig": "Import config",
-      "configNote": "Your configuration (consoles, themes, paths) is automatically preserved during updates. Backups are automatically created before importing configurations.",
+      "configNote": "Your configuration (consoles, themes, paths) is automatically preserved during updates. Backups are automatically created before importing configurations. You can save your configuration if you format your computer or want to replicate the setup on another machine.",
       "checkForUpdates": "Check for updates",
       "checkingUpdates": "Checking for updates...",
       "newVersionAvailable": "There is a new version available:",
@@ -203,7 +206,9 @@
       "sort": "Sort",
       "search": "Search",
       "scanCovers": "Rescan games and covers",
-      "removeCover": "Remove cover"
+      "removeCover": "Remove cover",
+      "confirmRemoveCoverTitle": "Remove cover?",
+      "confirmRemoveCoverMessage": "Do you want to remove the downloaded cover for '{game}'? The console default cover will be shown."
     }
   }
 }

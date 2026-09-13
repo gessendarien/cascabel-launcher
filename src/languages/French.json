@@ -19,7 +19,8 @@
       "stop": "⏹ Arrêter",
       "retry": "Réessayer",
       "confirm": "Confirmer",
-      "selectOtherFolder": "Sélectionner un autre dossier"
+      "selectOtherFolder": "Sélectionner un autre dossier",
+      "scanCovers": "Scanner les couvertures"
     },
     "menu": {
       "configuration": "Configuration",
@@ -43,9 +44,11 @@
       "executablePath": "Chemin de l'exécutable",
       "gamesPath": "Chemin des jeux",
       "coversPath": "Dossier des couvertures",
-      "coverNote": "Les couvertures introuvables peuvent être placées automatiquement ou manuellement dans ce dossier avec le même nom que le jeu.",
+      "coverNote": "Les couvertures peuvent être placées manuellement dans ce dossier avec le même nom que le jeu. Si la couverture est introuvable, le système en téléchargera une d'après le nom du fichier.",
       "file": "Exécutable",
       "systemApp": "Installé",
+      "fileTooltip": "Fichier exécutable de la console qui n'est pas nécessairement installé sur le système.",
+      "systemAppTooltip": "Programme installé sur le système qui apparaît dans votre liste de programmes.",
       "selectSystemAppTitle": "Applications du système",
       "searchAppsPlaceholder": "Rechercher une application ou émulateur...",
       "filterGamesEmulators": "Jeux & Émulateurs",
@@ -109,7 +112,7 @@
       "backupConfig": "Créer une sauvegarde",
       "exportConfig": "Exporter la config",
       "importConfig": "Importer la config",
-      "configNote": "Votre configuration (consoles, thèmes, chemins) est automatiquement préservée lors des mises à jour. Les sauvegardes sont automatiquement créées avant l'importation de configurations.",
+      "configNote": "Votre configuration (consoles, thèmes, chemins) est automatiquement préservée lors des mises à jour. Les sauvegardes sont automatiquement créées avant l'importation de configurations. Vous pouvez enregistrer votre configuration si vous formatez votre ordinateur ou souhaitez reproduire la configuration sur un autre appareil.",
       "checkForUpdates": "Vérifier les mises à jour",
       "checkingUpdates": "Vérification en cours...",
       "newVersionAvailable": "Une nouvelle version est disponible :",
@@ -203,7 +206,9 @@
       "sort": "Trier",
       "search": "Rechercher",
       "scanCovers": "Réanalyser les jeux et jaquettes",
-      "removeCover": "Supprimer la photo"
+      "removeCover": "Supprimer la couverture",
+      "confirmRemoveCoverTitle": "Supprimer la couverture ?",
+      "confirmRemoveCoverMessage": "Voulez-vous supprimer la couverture téléchargée pour '{game}' ? L'image par défaut de la console sera affichée."
     }
   }
 }

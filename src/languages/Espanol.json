@@ -19,7 +19,8 @@
       "stop": "⏹ Stop",
       "retry": "Reintentar",
       "confirm": "Confirmar",
-      "selectOtherFolder": "Seleccionar otra carpeta"
+      "selectOtherFolder": "Seleccionar otra carpeta",
+      "scanCovers": "Escanear carátulas"
     },
     "menu": {
       "configuration": "Configuración",
@@ -43,9 +44,11 @@
       "executablePath": "Ruta ejecutable",
       "gamesPath": "Ruta juegos",
       "coversPath": "Carpeta de carátulas",
-      "coverNote": "Las carátulas no encontradas pueden ser colocadas de manera automática o manual en esta carpeta con el mismo nombre del juego.",
+      "coverNote": "Las carátulas pueden ser colocadas de manera manual en esta carpeta con el mismo nombre del juego. Si no se encuentra la carátula, el sistema descargará una basándose en el nombre del archivo.",
       "file": "Ejecutable",
       "systemApp": "Instalado",
+      "fileTooltip": "Archivo ejecutable de la consola que no necesariamente está instalado en el sistema.",
+      "systemAppTooltip": "Programa instalado en el sistema que aparece en tu lista de programas.",
       "selectSystemAppTitle": "Aplicaciones del sistema",
       "searchAppsPlaceholder": "Buscar aplicación o emulador...",
       "filterGamesEmulators": "Juegos y Emuladores",
@@ -109,7 +112,7 @@
       "backupConfig": "Crear backup",
       "exportConfig": "Exportar config",
       "importConfig": "Importar config",
-      "configNote": "Tu configuración (emuladores, temas, rutas) se conserva automáticamente durante las actualizaciones. Los backups se crean automáticamente antes de importar configuraciones.",
+      "configNote": "Tu configuración (emuladores, temas, rutas) se conserva automáticamente durante las actualizaciones. Los backups se crean automáticamente antes de importar configuraciones. Puedes guardar tu configuración si formateas tu computadora o quieres repetir la configuración en otro equipo.",
       "checkForUpdates": "Comprobar actualizaciones",
       "checkingUpdates": "Comprobando actualizaciones...",
       "newVersionAvailable": "Hay una nueva versión disponible:",
@@ -207,7 +210,9 @@
       "sort": "Ordenar",
       "search": "Buscar",
       "scanCovers": "Reescanear juegos y carátulas",
-      "removeCover": "Eliminar foto"
+      "removeCover": "Eliminar carátula",
+      "confirmRemoveCoverTitle": "¿Eliminar carátula?",
+      "confirmRemoveCoverMessage": "¿Deseas eliminar la carátula descargada para '{game}'? Se mostrará la imagen predeterminada de la consola."
     }
   }
 }
