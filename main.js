@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -376,12 +376,94 @@ function getLinuxSystemApps() {
   return apps;
 }
 
+// Obtener aplicaciones instaladas en el sistema en Windows
+let cachedWindowsApps = null;
+
+async function getWindowsSystemApps() {
+  if (cachedWindowsApps) {
+    return cachedWindowsApps;
+  }
+
+  const os = require('os');
+  const searchDirs = [
+    path.join(process.env.ProgramData || 'C:\\ProgramData', 'Microsoft\\Windows\\Start Menu\\Programs'),
+    path.join(process.env.APPDATA || '', 'Microsoft\\Windows\\Start Menu\\Programs'),
+    path.join(os.homedir(), 'Desktop'),
+    path.join(process.env.PUBLIC || 'C:\\Users\\Public', 'Desktop')
+  ];
+
+  function getLnkFiles(dir, depth = 0) {
+    let results = [];
+    if (!fs.existsSync(dir) || depth > 4) return results;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          results = results.concat(getLnkFiles(full, depth + 1));
+        } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.lnk')) {
+          results.push(full);
+        }
+      }
+    } catch (e) {}
+    return results;
+  }
+
+  const lnkFiles = searchDirs.flatMap(d => getLnkFiles(d));
+  const apps = [];
+  const seenTargets = new Set();
+
+  for (const lnk of lnkFiles) {
+    try {
+      const details = shell.readShortcutLink(lnk);
+      const target = details.target;
+      if (!target || !target.toLowerCase().endsWith('.exe')) continue;
+      if (!fs.existsSync(target)) continue;
+
+      const baseName = path.basename(lnk, '.lnk');
+      if (/uninstall|desinstalar|help|ayuda|website|readme|documentaci|manual/i.test(baseName)) continue;
+      if (seenTargets.has(target.toLowerCase())) continue;
+      seenTargets.add(target.toLowerCase());
+
+      const comment = details.description || '';
+      const isGameOrEmulator = /\b(game|juego|emulator|emulador|emulation|emulacion|retroarch|dolphin|pcsx|pcsx2|rpcs3|duckstation|mgba|visualboy|snes9x|zsnes|fceux|nestopia|mupen|project64|cemu|yuzu|ryujinx|citra|melonds|desmume|ppsspp|xenia|vita3k|redream|flycast|demul|mame|fbneo|steam|epic games|gog|heroic|lutris)\b/i.test(baseName) ||
+                               /\b(game|juego|emulator|emulador|emulation|emulacion|retroarch|dolphin|pcsx|pcsx2|rpcs3|duckstation|mgba|visualboy|snes9x|zsnes|fceux|nestopia|mupen|project64|cemu|yuzu|ryujinx|citra|melonds|desmume|ppsspp|xenia|vita3k|redream|flycast|demul|mame|fbneo|steam|epic games|gog|heroic|lutris)\b/i.test(comment) ||
+                               /\b(retroarch|dolphin|pcsx2|rpcs3|duckstation|mgba|snes9x|fceux|cemu|yuzu|ryujinx|citra|melonds|desmume|ppsspp|xenia|vita3k|redream|flycast|mame|steam)\b/i.test(path.basename(target));
+
+      apps.push({
+        name: baseName,
+        exec: target,
+        comment,
+        categories: isGameOrEmulator ? 'Game' : 'Utility',
+        isGameOrEmulator,
+        iconData: null
+      });
+    } catch (e) {}
+  }
+
+  // Extraer iconos de los ejecutables mediante Electron
+  await Promise.all(apps.map(async (appItem) => {
+    try {
+      const icon = await app.getFileIcon(appItem.exec, { size: 'normal' });
+      if (icon && !icon.isEmpty()) {
+        appItem.iconData = icon.toDataURL();
+      }
+    } catch (err) {}
+  }));
+
+  apps.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  cachedWindowsApps = apps;
+  return apps;
+}
+
 // Handler IPC para listar aplicaciones instaladas en el sistema
 ipcMain.handle('get-system-apps', async () => {
-  if (process.platform !== 'linux') {
-    return [];
+  if (process.platform === 'linux') {
+    return getLinuxSystemApps();
+  } else if (process.platform === 'win32') {
+    return getWindowsSystemApps();
   }
-  return getLinuxSystemApps();
+  return [];
 });
 
 // Lanzar juego
