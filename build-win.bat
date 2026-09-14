@@ -13,11 +13,19 @@ cd /d "%~dp0"
 set "OUTPUT_DIR=%~dp0output"
 set "DIST_DIR=%~dp0dist"
 
+:: Ensure no trailing backslash to prevent \" quote escaping issues in cmd
+if "%OUTPUT_DIR:~-1%"=="\" set "OUTPUT_DIR=%OUTPUT_DIR:~0,-1%"
+if "%DIST_DIR:~-1%"=="\" set "DIST_DIR=%DIST_DIR:~0,-1%"
+
 echo.
 echo =============================================
 echo   Cascabel Launcher - Windows Build
 echo =============================================
 echo.
+
+:: -- Close running instances to release file locks --
+taskkill /F /IM "Cascabel*.exe" >nul 2>&1
+timeout /t 1 /nobreak >nul 2>&1
 
 :: -- Check Node.js --------------------------
 where node >nul 2>nul
@@ -55,9 +63,9 @@ if "!needs_install!"=="true" (
 :: -- Clean previous builds ------------------
 echo.
 echo [INFO] Cleaning previous build...
-if exist "%OUTPUT_DIR%" rmdir /s /q "%OUTPUT_DIR%"
-if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%"
-mkdir "%OUTPUT_DIR%"
+if exist "%OUTPUT_DIR%" rmdir /s /q "%OUTPUT_DIR%" >nul 2>&1
+if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%" >nul 2>&1
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 
 :: -- Build ----------------------------------
 echo.
@@ -71,19 +79,45 @@ if errorlevel 1 (
 )
 
 :: -- Copy .exe to output --------------------
+echo.
+echo [INFO] Copying executable to output folder...
+
 if not exist "%DIST_DIR%" (
     echo [ERROR] dist\ directory not found. Build may have failed.
     goto :end_pause
 )
 
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
+
+:: Copy using PowerShell (handles paths and spaces cleanly)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Copy-Item -Path '%DIST_DIR%\*.exe' -Destination '%OUTPUT_DIR%' -Force" >nul 2>&1
+
+:: Fallback copy if needed
+if not exist "%OUTPUT_DIR%\*.exe" (
+    copy /y "%DIST_DIR%\*.exe" "%OUTPUT_DIR%" >nul 2>&1
+)
+
+:: -- Verify copy success --------------------
 set "found=0"
-for %%f in ("%DIST_DIR%\*.exe") do (
-    copy /y "%%f" "%OUTPUT_DIR%\" >nul
+set "EXE_NAME="
+set "EXE_SIZE="
+for %%f in ("%OUTPUT_DIR%\*.exe") do (
     set "found=1"
+    set "EXE_NAME=%%~nxf"
+    set "EXE_SIZE=%%~zf"
 )
 
 if "!found!"=="0" (
-    echo [ERROR] No .exe files found in dist\.
+    echo.
+    echo =======================================================
+    echo   [ERROR] BUILD FAILED: Executable not found in output\
+    echo =======================================================
+    echo The executable could not be copied to:
+    echo   %OUTPUT_DIR%
+    echo.
+    echo Please make sure Cascabel is not currently running or
+    echo locked by an antivirus program.
+    echo =======================================================
     goto :end_pause
 )
 
@@ -94,13 +128,15 @@ echo   BUILD COMPLETED SUCCESSFULLY!
 echo =======================================================
 echo.
 echo [OK] The build has finished successfully.
-echo [OK] Your Windows portable executable is located in the output\ folder:
+echo [OK] Your Windows portable executable is ready in the output\ folder:
 echo.
-echo File(s):
+echo File:        !EXE_NAME!
+echo Size:        !EXE_SIZE! bytes
+echo Folder:      %OUTPUT_DIR%
+echo Full Path:   %OUTPUT_DIR%\!EXE_NAME!
+echo.
+echo Files in output:
 dir /b "%OUTPUT_DIR%"
-echo.
-echo Folder path:
-echo %OUTPUT_DIR%
 echo.
 echo =======================================================
 
@@ -108,3 +144,4 @@ echo =======================================================
 echo.
 pause
 exit /b 0
+
