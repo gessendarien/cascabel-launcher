@@ -33,13 +33,28 @@ You can download the compiled AppImage directly from the releases section:
 
 **[Download Cascabel Launcher for Linux (.AppImage)](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
 
+Or compile it yourself using the `build-linux.sh` script:
+
+```bash
+chmod +x build-linux.sh
+./build-linux.sh
+```
+
+The generated `.AppImage` will be placed in the `output/` folder.
+
 ### Windows
 
-To install on Windows, you must compile the application yourself. Run the `build-win.bat` script:
+You can download the compiled executable directly from the releases section:
+
+**[Download Cascabel Launcher for Windows (.exe)](https://github.com/gessendarien/cascabel-launcher/releases/latest)**
+
+Or compile it yourself using the `build-win.bat` script:
 
 ```bash
 build-win.bat
 ```
+
+The generated portable `.exe` will be placed in the `output/` folder.
 
 Current version: 1.2.0
 
@@ -54,6 +69,10 @@ Current version: 1.2.0
 - Right-click on tabs to edit them or sort the content
 - If the tab bar is full, you can scroll through all tabs with the mouse wheel
 
+## Website
+
+[https://gessendarien.github.io/cascabel-launcher/](https://gessendarien.github.io/cascabel-launcher/)
+
 ## Disclaimer
 
 **Important**: This program is distributed without any warranty and is non-profit. Any material configured within the program (game backups, console executables, cover art or images, and audio) must be your own creation and you must legally own the rights to use it. This launcher is solely a management and organization tool; it does not distribute, encourage, incite, or provide any material, in whole or in part, protected under copyright law. The user is responsible for complying with all applicable copyright laws in their jurisdiction.
@@ -61,7 +80,6 @@ Current version: 1.2.0
 ## License
 
 GNU General Public License v3.0
-
 
 ## Thanks
 

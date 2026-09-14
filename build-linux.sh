@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────
-#  Cascabel Launcher — Build Script
-#  Builds the .exe (Windows) or .AppImage (Linux)
+#  Cascabel Launcher — Linux Build Script
+#  Builds the .AppImage (Linux)
 #  and places the result in the output/ folder.
 # ──────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ load_node_manager
 print_header() {
   echo ""
   echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
-  echo -e "${CYAN}║   ${BOLD}Cascabel Launcher — Build Menu${NC}${CYAN}       ║${NC}"
+  echo -e "${CYAN}║   ${BOLD}Cascabel Launcher — Linux Build${NC}${CYAN}        ║${NC}"
   echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
   echo ""
 }
@@ -93,8 +93,6 @@ clean_output() {
 }
 
 copy_artifacts() {
-  local platform="$1"
-
   if [ ! -d "$DIST_DIR" ]; then
     echo -e "${RED}Error: dist/ directory not found. Build may have failed.${NC}"
     exit 1
@@ -102,27 +100,22 @@ copy_artifacts() {
 
   mkdir -p "$OUTPUT_DIR"
 
-  if [ "$platform" = "win" ]; then
-    # Copy .exe files
-    find "$DIST_DIR" -name "*.exe" -exec cp {} "$OUTPUT_DIR/" \;
-    local count
-    count=$(find "$OUTPUT_DIR" -name "*.exe" 2>/dev/null | wc -l)
-    if [ "$count" -eq 0 ]; then
-      echo -e "${RED}No .exe files found in dist/.${NC}"
-      exit 1
-    fi
-  elif [ "$platform" = "linux" ]; then
-    # Copy .AppImage files
+  # Copy .AppImage files
+  find "$DIST_DIR" -maxdepth 1 -name "*.AppImage" -exec cp {} "$OUTPUT_DIR/" \;
+  local count
+  count=$(find "$OUTPUT_DIR" -maxdepth 1 -name "*.AppImage" 2>/dev/null | wc -l)
+  if [ "$count" -eq 0 ]; then
     find "$DIST_DIR" -name "*.AppImage" -exec cp {} "$OUTPUT_DIR/" \;
-    local count
     count=$(find "$OUTPUT_DIR" -name "*.AppImage" 2>/dev/null | wc -l)
-    if [ "$count" -eq 0 ]; then
-      echo -e "${RED}No .AppImage files found in dist/.${NC}"
-      exit 1
-    fi
-    # Make AppImage executable
-    chmod +x "$OUTPUT_DIR"/*.AppImage
   fi
+
+  if [ "$count" -eq 0 ]; then
+    echo -e "${RED}No .AppImage files found in dist/.${NC}"
+    exit 1
+  fi
+
+  # Make AppImage executable
+  chmod +x "$OUTPUT_DIR"/*.AppImage
 
   echo ""
   echo -e "${GREEN}✔ Build artifacts copied to:${NC} ${BOLD}$OUTPUT_DIR/${NC}"
@@ -131,51 +124,19 @@ copy_artifacts() {
   ls -lh "$OUTPUT_DIR/"
 }
 
-build_windows() {
-  echo ""
-  echo -e "${CYAN}Building for Windows (.exe)...${NC}"
-  echo ""
-  npx electron-builder --win --config.directories.output=dist
-  copy_artifacts "win"
-}
-
 build_linux() {
   echo ""
   echo -e "${CYAN}Building for Linux (.AppImage)...${NC}"
   echo ""
   npx electron-builder --linux --config.directories.output=dist
-  copy_artifacts "linux"
+  copy_artifacts
 }
-
 
 # ── Main ────────────────────────────────────
 print_header
 check_dependencies
-
-echo -e "  ${BOLD}1)${NC}  Build for Linux    (.AppImage)"
-echo -e "  ${BOLD}2)${NC}  Build for Windows  (.exe)"
-echo -e "  ${BOLD}0)${NC}  Exit"
-echo ""
-read -rp "$(echo -e "${CYAN}Select an option [0-2]:${NC} ")" choice
-
-case "$choice" in
-  1)
-    clean_output
-    build_linux
-    ;;
-  2)
-    clean_output
-    build_windows
-    ;;
-  0)
-    echo -e "${YELLOW}Cancelled.${NC}"
-    exit 0
-    ;;
-  *)
-    echo -e "${RED}Invalid option.${NC}"
-    exit 1
-    ;;
-esac
+clean_output
+build_linux
 
 echo ""
 echo -e "${GREEN}${BOLD}Build completed successfully!${NC}"

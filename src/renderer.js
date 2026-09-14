@@ -2,7 +2,16 @@ const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const coverScraper = require('./coverScraper');
-let config = { emulators: [] };
+let config = {
+  emulators: [],
+  theme: {
+    tabStyle: 'icons',
+    tabAlignment: 'center'
+  },
+  ui: {
+    language: 'English'
+  }
+};
 
 // Cache en memoria para juegos y DOM de cada emulador (evita relectura y re-renderizado al navegar entre pestañas)
 const emulatorGamesCache = new Map();
@@ -57,7 +66,19 @@ async function loadConfig() {
   try {
     const loaded = await ipcRenderer.invoke('load-config');
     if (loaded) {
-      config = loaded;
+      config = {
+        ...config,
+        ...loaded,
+        theme: {
+          tabStyle: 'icons',
+          tabAlignment: 'center',
+          ...(loaded.theme || {})
+        },
+        ui: {
+          language: 'English',
+          ...(loaded.ui || {})
+        }
+      };
       emulatorGamesCache.clear();
       emulatorDOMCache.clear();
       emulatorScrapedSet.clear();
@@ -1091,8 +1112,8 @@ function renderTabs() {
   }
 
   // Estilos de pestañas y alineación configurados
-  const tabStyle = (config.theme && config.theme.tabStyle) || 'both';
-  const tabAlignment = (config.theme && config.theme.tabAlignment) || 'left';
+  const tabStyle = (config.theme && config.theme.tabStyle) || 'icons';
+  const tabAlignment = (config.theme && config.theme.tabAlignment) || 'center';
 
   const tabsContainer = document.createElement('div');
   tabsContainer.className = `tabs-container align-${tabAlignment}`;
@@ -2499,7 +2520,7 @@ function showConfigModal() {
                     <select id="tab-style-select">
                       <option value="both">${t('ui.configuration.tabStyleBoth')}</option>
                       <option value="text">${t('ui.configuration.tabStyleText')}</option>
-                      <option value="icons">${t('ui.configuration.tabStyleIcons')}</option>
+                      <option value="icons" selected>${t('ui.configuration.tabStyleIcons')}</option>
                     </select>
                   </div>
                 </div>
@@ -2516,7 +2537,7 @@ function showConfigModal() {
                   <div class="config-card-action" style="min-width: 200px;">
                     <select id="tab-alignment-select">
                       <option value="left">${t('ui.configuration.alignLeft')}</option>
-                      <option value="center">${t('ui.configuration.alignCenter')}</option>
+                      <option value="center" selected>${t('ui.configuration.alignCenter')}</option>
                       <option value="right">${t('ui.configuration.alignRight')}</option>
                     </select>
                   </div>
@@ -2773,10 +2794,10 @@ function showConfigModal() {
     const tabAlignmentSelect = document.getElementById('tab-alignment-select');
 
     if (tabStyleSelect) {
-      tabStyleSelect.value = (config.theme && config.theme.tabStyle) || 'both';
+      tabStyleSelect.value = (config.theme && config.theme.tabStyle) || 'icons';
     }
     if (tabAlignmentSelect) {
-      tabAlignmentSelect.value = (config.theme && config.theme.tabAlignment) || 'left';
+      tabAlignmentSelect.value = (config.theme && config.theme.tabAlignment) || 'center';
     }
   }
   
@@ -2843,8 +2864,8 @@ function showConfigModal() {
     config.theme.mainBackgroundColor = mainBackgroundColor;
     
     // Guardar opciones de pestañas
-    const tabStyle = document.getElementById('tab-style-select')?.value || 'both';
-    const tabAlignment = document.getElementById('tab-alignment-select')?.value || 'left';
+    const tabStyle = document.getElementById('tab-style-select')?.value || 'icons';
+    const tabAlignment = document.getElementById('tab-alignment-select')?.value || 'center';
     
     config.theme.tabStyle = tabStyle;
     config.theme.tabAlignment = tabAlignment;
@@ -2887,8 +2908,8 @@ function showConfigModal() {
     document.getElementById('tab-text-color').value = '#ffffff';
     document.getElementById('main-background-color').value = '#222222';
     
-    if (document.getElementById('tab-style-select')) document.getElementById('tab-style-select').value = 'both';
-    if (document.getElementById('tab-alignment-select')) document.getElementById('tab-alignment-select').value = 'left';
+    if (document.getElementById('tab-style-select')) document.getElementById('tab-style-select').value = 'icons';
+    if (document.getElementById('tab-alignment-select')) document.getElementById('tab-alignment-select').value = 'center';
 
     // Actualizar los valores mostrados
     colorInputs.forEach(input => updateColorValue(input));

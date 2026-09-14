@@ -76,7 +76,7 @@ if not exist "%DIST_DIR%" (
 )
 
 set "found=0"
-for /r "%DIST_DIR%" %%f in (*.exe) do (
+for %%f in ("%DIST_DIR%\*.exe") do (
     copy /y "%%f" "%OUTPUT_DIR%\" >nul
     set "found=1"
 )
