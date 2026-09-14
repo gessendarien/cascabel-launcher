@@ -139,4 +139,11 @@ clean_output
 build_linux
 
 echo ""
-echo -e "${GREEN}${BOLD}Build completed successfully!${NC}"
+echo -e "${GREEN}${BOLD}=======================================================${NC}"
+echo -e "${GREEN}${BOLD}  BUILD COMPLETED SUCCESSFULLY!${NC}"
+echo -e "${GREEN}${BOLD}=======================================================${NC}"
+echo ""
+echo -e "${GREEN}[OK] The build has finished successfully.${NC}"
+echo -e "${GREEN}[OK] Your Linux AppImage is located in the output/ folder:${NC}"
+echo -e "     ${BOLD}$OUTPUT_DIR${NC}"
+echo ""

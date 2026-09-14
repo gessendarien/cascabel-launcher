@@ -88,14 +88,20 @@ if "!found!"=="0" (
 
 :: ── Done ───────────────────────────────────
 echo.
-echo =============================================
-echo   Build completed successfully!
-echo =============================================
+echo =======================================================
+echo   BUILD COMPLETED SUCCESSFULLY!
+echo =======================================================
 echo.
-echo Output files:
+echo [OK] The build has finished successfully.
+echo [OK] Your Windows portable executable is located in the output\ folder:
+echo.
+echo File(s):
 dir /b "%OUTPUT_DIR%"
 echo.
-echo Location: %OUTPUT_DIR%
+echo Folder path:
+echo %OUTPUT_DIR%
+echo.
+echo =======================================================
 
 :end_pause
 echo.
