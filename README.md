@@ -35,11 +35,10 @@ You can download the compiled AppImage directly from the releases section:
 
 ### Windows
 
-To install on Windows, you must compile the application yourself. Run the `build.sh` script (e.g., using Git Bash or WSL) and select option 2 from the menu:
+To install on Windows, you must compile the application yourself. Run the `build-win.bat` script:
 
 ```bash
-./build.sh
-# Select option [2] Build for Windows (.exe)
+build-win.bat
 ```
 
 Current version: 1.2.0
