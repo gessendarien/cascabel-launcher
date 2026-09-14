@@ -1,11 +1,12 @@
 @echo off
+chcp 65001 >nul
 setlocal enabledelayedexpansion
 
-:: ──────────────────────────────────────────────
-::  Cascabel Launcher — Windows Build Script
+:: ----------------------------------------------
+::  Cascabel Launcher - Windows Build Script
 ::  Builds the portable .exe and places it
 ::  in the output\ folder.
-:: ──────────────────────────────────────────────
+:: ----------------------------------------------
 
 cd /d "%~dp0"
 
@@ -14,11 +15,11 @@ set "DIST_DIR=%~dp0dist"
 
 echo.
 echo =============================================
-echo   Cascabel Launcher — Windows Build
+echo   Cascabel Launcher - Windows Build
 echo =============================================
 echo.
 
-:: ── Check Node.js ──────────────────────────
+:: -- Check Node.js --------------------------
 where node >nul 2>nul
 if errorlevel 1 (
     echo [ERROR] Node.js is not installed. Please install it from https://nodejs.org
@@ -34,7 +35,7 @@ if errorlevel 1 (
 echo [OK] Node.js found: 
 call node --version
 
-:: ── Check dependencies ─────────────────────
+:: -- Check dependencies ---------------------
 set "needs_install=false"
 if not exist "node_modules\" set "needs_install=true"
 
@@ -51,14 +52,14 @@ if "!needs_install!"=="true" (
     echo [OK] Dependencies found.
 )
 
-:: ── Clean previous builds ──────────────────
+:: -- Clean previous builds ------------------
 echo.
 echo [INFO] Cleaning previous build...
 if exist "%OUTPUT_DIR%" rmdir /s /q "%OUTPUT_DIR%"
 if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%"
 mkdir "%OUTPUT_DIR%"
 
-:: ── Build ──────────────────────────────────
+:: -- Build ----------------------------------
 echo.
 echo [INFO] Building Windows executable...
 echo.
@@ -69,7 +70,7 @@ if errorlevel 1 (
     goto :end_pause
 )
 
-:: ── Copy .exe to output ────────────────────
+:: -- Copy .exe to output --------------------
 if not exist "%DIST_DIR%" (
     echo [ERROR] dist\ directory not found. Build may have failed.
     goto :end_pause
@@ -86,7 +87,7 @@ if "!found!"=="0" (
     goto :end_pause
 )
 
-:: ── Done ───────────────────────────────────
+:: -- Done -----------------------------------
 echo.
 echo =======================================================
 echo   BUILD COMPLETED SUCCESSFULLY!
